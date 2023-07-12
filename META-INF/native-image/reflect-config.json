@@ -1,0 +1,841 @@
+[
+{
+  "name":"[Lcom.sun.tools.javac.jvm.PoolConstant$LoadableConstant;"
+},
+{
+  "name":"java.lang.Thread",
+  "fields":[{"name":"threadLocalRandomProbe"}]
+},
+{
+  "name":"java.security.SecureRandomParameters"
+},
+{
+  "name":"java.util.concurrent.atomic.AtomicBoolean",
+  "fields":[{"name":"value"}]
+},
+{
+  "name":"java.util.concurrent.atomic.AtomicReference",
+  "fields":[{"name":"value"}]
+},
+{
+  "name":"java.util.concurrent.atomic.Striped64",
+  "fields":[{"name":"base"}, {"name":"cellsBusy"}]
+},
+{
+  "name":"javax.imageio.spi.ImageReaderSpi"
+},
+{
+  "name":"javax.imageio.spi.ImageReaderWriterSpi",
+  "methods":[{"name":"getFileSuffixes","parameterTypes":[] }, {"name":"getFormatNames","parameterTypes":[] }, {"name":"getMIMETypes","parameterTypes":[] }]
+},
+{
+  "name":"javax.imageio.spi.ImageWriterSpi"
+},
+{
+  "name":"loci.common.services.S3ClientService"
+},
+{
+  "name":"loci.common.services.S3ClientServiceImpl"
+},
+{
+  "name":"loci.formats.in.AFIReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.AIMReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.APLReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.APNGReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ARFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.AVIReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.AliconaReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.AmiraReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.AnalyzeReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.BDReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.BDVReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.BMPReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.BioRadGelReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.BioRadReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.BioRadSCNReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.BrukerReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.BurleighReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.CV7000Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.CanonRawReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.CellH5Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.CellSensReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.CellVoyagerReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.CellWorxReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.CellomicsReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ColumbusReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.DNGReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.DeltavisionReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.DicomReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.EPSReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.Ecat7Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FEIReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FEITiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FV1000Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FakeReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FilePatternReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FitsReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FlexReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FlowSightReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FluoviewReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.FujiReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.GIFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.GatanDM2Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.GatanReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.GelReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.HISReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.HRDGDFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.HamamatsuVMSReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.HitachiReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.I2IReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ICSReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.IM3Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.IMODReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.INRReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.IPLabReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.IPWReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ImaconReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ImagicReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ImarisHDFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ImarisReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ImarisTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ImprovisionTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ImspectorReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.InCell3000Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.InCellReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.InveonReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.IonpathMIBITiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.IvisionReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.JEOLReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.JPEG2000Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.JPEGReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.JPKReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.JPXReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.KLBReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.KhorosReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.KodakReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.L2DReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.LEOReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.LIFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.LIMReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.LOFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.LeicaReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.LeicaSCNReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.LiFlimReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MIASReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MINCReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MNGReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MRCReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MRWReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MetamorphReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MetamorphTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MetaxpressTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MicroCTReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MicromanagerReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MikroscanTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.MolecularImagingReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.NAFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ND2Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.NDPIReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.NDPISReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.NRRDReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.NiftiReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.NikonElementsTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.NikonReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.NikonTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.OBFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.OIRReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.OMETiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.OMEXMLReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.OlympusTileReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.OpenlabRawReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.OpenlabReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.OperettaReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.OxfordInstrumentsReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PCIReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PCORAWReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PCXReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PDSReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PGMReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PQBinReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PSDReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PerkinElmerReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PhotoshopTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PictReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PovrayReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PrairieReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.PyramidTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.QTReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.QuesantReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.RCPNLReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.RHKReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SBIGReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SDTReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SEQReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SIFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SISReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SMCameraReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SPCReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SPEReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SVSReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ScanrReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ScreenReader"
+},
+{
+  "name":"loci.formats.in.SeikoReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SimplePCITiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SlideBook6Reader"
+},
+{
+  "name":"loci.formats.in.SlideBook7Reader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SlidebookReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SlidebookTiffReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.SpiderReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.TCSReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.TargaReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.TecanReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.TextReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.TiffDelegateReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.TillVisionReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.TopometrixReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.TrestleReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.UBMReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.URLReader"
+},
+{
+  "name":"loci.formats.in.UnisokuReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.VGSAMReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.VarianFDFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.VectraReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.VeecoReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.VentanaReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.VisitechReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.VolocityClippingReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.VolocityReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.WATOPReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.WlzReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.XLEFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ZarrReader"
+},
+{
+  "name":"loci.formats.in.ZeissCZIReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ZeissLMSReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ZeissLSMReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ZeissTIFFReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ZeissZVIReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.in.ZipReader",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.services.EXIFService"
+},
+{
+  "name":"loci.formats.services.EXIFServiceImpl"
+},
+{
+  "name":"loci.formats.services.JAIIIOService"
+},
+{
+  "name":"loci.formats.services.JAIIIOServiceImpl"
+},
+{
+  "name":"loci.formats.services.JHDFService"
+},
+{
+  "name":"loci.formats.services.JHDFServiceImpl"
+},
+{
+  "name":"loci.formats.services.JPEGTurboService"
+},
+{
+  "name":"loci.formats.services.JPEGTurboServiceImpl"
+},
+{
+  "name":"loci.formats.services.JPEGXRService"
+},
+{
+  "name":"loci.formats.services.JPEGXRServiceImpl"
+},
+{
+  "name":"loci.formats.services.LuraWaveService"
+},
+{
+  "name":"loci.formats.services.LuraWaveServiceImpl"
+},
+{
+  "name":"loci.formats.services.MDBService"
+},
+{
+  "name":"loci.formats.services.MDBServiceImpl"
+},
+{
+  "name":"loci.formats.services.MetakitService"
+},
+{
+  "name":"loci.formats.services.MetakitServiceImpl"
+},
+{
+  "name":"loci.formats.services.NetCDFService"
+},
+{
+  "name":"loci.formats.services.NetCDFServiceImpl"
+},
+{
+  "name":"loci.formats.services.OMEXMLService"
+},
+{
+  "name":"loci.formats.services.OMEXMLServiceImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"loci.formats.services.POIService"
+},
+{
+  "name":"loci.formats.services.POIServiceImpl"
+},
+{
+  "name":"loci.formats.services.WlzService"
+},
+{
+  "name":"loci.formats.services.WlzServiceImpl"
+},
+{
+  "name":"ome.codecs.services.JAIIIOService"
+},
+{
+  "name":"ome.codecs.services.JAIIIOServiceImpl"
+},
+{
+  "name":"ome.codecs.services.LuraWaveService"
+},
+{
+  "name":"ome.codecs.services.LuraWaveServiceImpl"
+},
+{
+  "name":"org.camicroscope.BFBridge",
+  "methods":[{"name":"main","parameterTypes":["java.lang.String[]"] }]
+},
+{
+  "name":"sun.security.provider.NativePRNG",
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"<init>","parameterTypes":["java.security.SecureRandomParameters"] }]
+},
+{
+  "name":"sun.security.provider.SHA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+}
+]
