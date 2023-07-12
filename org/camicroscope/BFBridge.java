@@ -85,15 +85,14 @@ public class BFBridge {
             return toCBoolean(true);
         } catch (Exception e) {
             lastError = e.toString();
-            return toCBoolean(false);
-        } finally {
             close();
+            return toCBoolean(false);
         }
     }
 
     // If expected to be the single file, or always true for single-file formats
     @CEntryPoint(name = "bf_is_single_file")
-    static byte BFIIsSingleFile(IsolateThread t, CCharPointer filePath) {
+    static byte BFIsSingleFile(IsolateThread t, CCharPointer filePath) {
         try {
             return toCBoolean(reader.isSingleFile(toJavaString(filePath)));
         } catch (Exception e) {
