@@ -3,6 +3,18 @@
   "name":"[Lcom.sun.tools.javac.jvm.PoolConstant$LoadableConstant;"
 },
 {
+  "name":"[Lloci.formats.tiff.OnDemandLongArray;"
+},
+{
+  "name":"[[I"
+},
+{
+  "name":"[[J"
+},
+{
+  "name":"[[Lloci.formats.tiff.TiffRational;"
+},
+{
   "name":"java.lang.Thread",
   "fields":[{"name":"threadLocalRandomProbe"}]
 },
@@ -813,6 +825,10 @@
 },
 {
   "name":"loci.formats.services.WlzServiceImpl"
+},
+{
+  "name":"loci.formats.tiff.IFD",
+  "allDeclaredFields":true
 },
 {
   "name":"ome.codecs.services.JAIIIOService"

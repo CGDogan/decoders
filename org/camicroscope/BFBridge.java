@@ -14,8 +14,10 @@ import static org.graalvm.nativeimage.c.type.CTypeConversion.toJavaString;
 import loci.formats.tools.ImageConverter;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Files;
+import java.util.Arrays;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
@@ -43,6 +45,12 @@ import loci.common.RandomAccessInputStream;
 public class BFBridge {
     private static ImageReader reader = new ImageReader();
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
+    static {
+        reader.setMetadataStore(metadata);
+    // Save file-specific metadata as well?
+    //metadata.setOriginalMetadataPopulated(true);
+}
+
     private static String lastError = "";
     private static byte[] communicationBuffer = new byte[10000000];
 
@@ -52,7 +60,7 @@ public class BFBridge {
     }
 
     @CEntryPoint(name = "bf_is_compatible")
-    // Please note: this changes the current file
+    // Please note: this closes the previous file
     static byte BFIsCompatible(IsolateThread t, final CCharPointer filePath) {
         try {
             // If we didn't have this line, I would change
@@ -61,20 +69,25 @@ public class BFBridge {
             return toCBoolean(reader.getReader(toJavaString(filePath)) != null);
         } catch (Exception e) {
             return toCBoolean(false);
+        } finally {
+            close();
         }
     }
 
     @CEntryPoint(name = "bf_open")
+    // Do not open another file without closing current
     static byte BFOpen(IsolateThread t, final CCharPointer filePath) {
         try {
             // Use the easier resolution API
             reader.setFlattenedResolutions(false);
             reader.setId(toJavaString(filePath));
-            reader.setMetadataStore(metadata);
+            //reader.setMetadataStore(metadata);
             return toCBoolean(true);
         } catch (Exception e) {
             lastError = e.toString();
             return toCBoolean(false);
+        } finally {
+           close();
         }
     }
 
@@ -490,11 +503,37 @@ public class BFBridge {
         }
     }
 
+    private static void close() {
+        try {
+            reader.close();
+        } catch (Exception e) {
+
+        }
+    }
+
     // Debug function
     public static byte openFile(String filename) throws Exception {
         try {
             System.out.println("Step 1");
-            reader.getReader("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/out2ewfrerwf_tiff_conv.tif");
+            File path = new File("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/");
+            File [] files = path.listFiles();
+            System.out.println("Dirlist: " + Arrays.toString(files));
+                for (int i = 0; i < files.length; i++){
+        if (files[i].isFile()){
+                        System.out.println("LLOP" + i);
+
+            reader.setFlattenedResolutions(false);
+                                    reader.getReader(files[i].getAbsolutePath());
+                                                close();
+
+            reader.setId((files[i]).getAbsolutePath());
+            
+            //reader.setMetadataStore(metadata);
+            System.out.println(files[i].getAbsolutePath());
+            close();
+        }
+    }
+//            reader.getReader("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/out2ewfrerwf_tiff_conv.tif");
             System.out.println("Step 1.2");
 
 

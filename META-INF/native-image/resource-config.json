@@ -54,8 +54,11 @@
     "name":"com.sun.tools.javac.resources.javac",
     "classNames":["com.sun.tools.javac.resources.javac"]
   }, {
+    "name":"com.sun.tools.javac.resources.launcher",
+    "classNames":["com.sun.tools.javac.resources.launcher"]
+  }, {
     "name":"org.apache.xerces.impl.msg.XMLMessages",
-    "locales":["", "en"]
+    "locales":["", "en", "und"]
   }, {
     "name":"sun.awt.resources.awt",
     "classNames":["sun.awt.resources.awt"]
