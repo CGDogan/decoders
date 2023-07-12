@@ -228,6 +228,10 @@ public class BFBridge {
     }
 
     @CEntryPoint(name = "bf_get_bits_per_pixel")
+    // The name is misleading
+    // Actually this gives bits per pixel per channel!
+    // openBytes documentation makes this clear
+    // https://downloads.openmicroscopy.org/bio-formats/latest/api/loci/formats/ImageReader.html#openBytes-int-byte:A-
     static int BFGetBitsPerPixel(IsolateThread t) {
         // https://downloads.openmicroscopy.org/bio-formats/latest/api/loci/formats/IFormatReader.html#getPixelType--
         // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L96
@@ -499,6 +503,19 @@ public class BFBridge {
         } catch (Exception e) {
             lastError = e.toString();
             return toCBoolean(false);
+        }
+    }
+
+    @CEntryPoint(name = "bfinternal_deleteme")
+    static byte BFInternalDeleteme(IsolateThread t, CCharPointer file) {
+        var s = toJavaString(file);
+        var a = new FileInputStream(s);
+        var b = new BufferedInputStream(a, 81920);
+        ImageInputStream stream = new MemoryCacheImageInputStream(b);
+        try {
+            return (byte) stream.readBit();
+        } catch (Exception e) {
+            return -1;
         }
     }
 
