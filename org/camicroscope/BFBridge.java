@@ -47,9 +47,9 @@ public class BFBridge {
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
     static {
         reader.setMetadataStore(metadata);
-    // Save file-specific metadata as well?
-    //metadata.setOriginalMetadataPopulated(true);
-}
+        // Save file-specific metadata as well?
+        // metadata.setOriginalMetadataPopulated(true);
+    }
 
     private static String lastError = "";
     private static byte[] communicationBuffer = new byte[10000000];
@@ -81,13 +81,13 @@ public class BFBridge {
             // Use the easier resolution API
             reader.setFlattenedResolutions(false);
             reader.setId(toJavaString(filePath));
-            //reader.setMetadataStore(metadata);
+            // reader.setMetadataStore(metadata);
             return toCBoolean(true);
         } catch (Exception e) {
             lastError = e.toString();
             return toCBoolean(false);
         } finally {
-           close();
+            close();
         }
     }
 
@@ -516,26 +516,25 @@ public class BFBridge {
         try {
             System.out.println("Step 1");
             File path = new File("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/");
-            File [] files = path.listFiles();
+            File[] files = path.listFiles();
             System.out.println("Dirlist: " + Arrays.toString(files));
-                for (int i = 0; i < files.length; i++){
-        if (files[i].isFile()){
-                        System.out.println("LLOP" + i);
+            for (int i = 0; i < files.length; i++) {
+                if (files[i].isFile()) {
+                    System.out.println("LLOP" + i);
 
-            reader.setFlattenedResolutions(false);
-                                    reader.getReader(files[i].getAbsolutePath());
-                                                close();
+                    reader.setFlattenedResolutions(false);
+                    reader.getReader(files[i].getAbsolutePath());
+                    close();
 
-            reader.setId((files[i]).getAbsolutePath());
-            
-            //reader.setMetadataStore(metadata);
-            System.out.println(files[i].getAbsolutePath());
-            close();
-        }
-    }
-//            reader.getReader("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/out2ewfrerwf_tiff_conv.tif");
+                    reader.setId((files[i]).getAbsolutePath());
+
+                    // reader.setMetadataStore(metadata);
+                    System.out.println(files[i].getAbsolutePath());
+                    close();
+                }
+            }
+            // reader.getReader("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/out2ewfrerwf_tiff_conv.tif");
             System.out.println("Step 1.2");
-
 
             ImageInputStream stream = new MemoryCacheImageInputStream(new BufferedInputStream(new FileInputStream(
                     "/Users/zerf/Desktop/Screenshot 2023-06-30 at 15.31.08.png"), 81920));
