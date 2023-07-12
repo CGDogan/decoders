@@ -1,5 +1,5 @@
 # Can be substituted with apt-get install libopenslide0
-FROM cgd30/openslide:newv7
+FROM cgd30/openslide:newv8
 
 RUN apt-get -q update -y
 RUN apt-get -q install -y wget
@@ -13,9 +13,6 @@ echo x64 >> /platformid; \
 fi
 
 RUN cat /platformid
-
-#removeme with cgd30 openslide update
-WORKDIR /
 
 RUN wget -q "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-20.0.1/graalvm-community-jdk-20.0.1_linux-$(cat /platformid)_bin.tar.gz" -O graal.tar.gz && tar -xzvf graal.tar.gz > /dev/null && rm graal.tar.gz
 ENV JAVA_HOME=/graalvm-community-openjdk-20.0.1+9.1
