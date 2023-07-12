@@ -27,6 +27,10 @@
   }, {
     "pattern":"\\QMETA-INF/services/java.nio.file.spi.FileSystemProvider\\E"
   }, {
+    "pattern":"\\QMETA-INF/services/javax.xml.parsers.SAXParserFactory\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/javax.xml.transform.TransformerFactory\\E"
+  }, {
     "pattern":"\\Qloci/common/services/services.properties\\E"
   }, {
     "pattern":"\\Qloci/formats/FormatTools.class\\E"
@@ -49,6 +53,9 @@
   }, {
     "name":"com.sun.tools.javac.resources.javac",
     "classNames":["com.sun.tools.javac.resources.javac"]
+  }, {
+    "name":"org.apache.xerces.impl.msg.XMLMessages",
+    "locales":["", "en"]
   }, {
     "name":"sun.awt.resources.awt",
     "classNames":["sun.awt.resources.awt"]

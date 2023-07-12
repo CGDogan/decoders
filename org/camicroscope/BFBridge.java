@@ -494,7 +494,7 @@ public class BFBridge {
     public static byte openFile(String filename) throws Exception {
         try {
             System.out.println("Step 1");
-            reader.getReader("/Users/zerf/Desktop/signalbackup/a.command");
+            reader.getReader("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/out2ewfrerwf_tiff_conv.tif");
             System.out.println("Step 1.2");
 
 

@@ -827,6 +827,14 @@
   "name":"ome.codecs.services.LuraWaveServiceImpl"
 },
 {
+  "name":"org.apache.xerces.impl.dv.dtd.DTDDVFactoryImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.apache.xerces.parsers.XIncludeAwareParserConfiguration",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"org.camicroscope.BFBridge",
   "methods":[{"name":"main","parameterTypes":["java.lang.String[]"] }]
 },
