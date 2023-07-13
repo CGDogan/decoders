@@ -14,16 +14,22 @@ fi
 
 RUN cat /platformid
 
-RUN wget -q "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-20.0.1/graalvm-community-jdk-20.0.1_linux-$(cat /platformid)_bin.tar.gz" -O graal.tar.gz && tar -xzvf graal.tar.gz > /dev/null && rm graal.tar.gz
+#RUN wget -q "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-20.0.1/graalvm-community-jdk-20.0.1_linux-$(cat /platformid)_bin.tar.gz" -O graal.tar.gz && tar -xzvf graal.tar.gz > /dev/null && rm graal.tar.gz
 ENV JAVA_HOME=/graalvm-community-openjdk-20.0.1+9.1
 ENV PATH="/graalvm-community-openjdk-20.0.1+9.1/bin:$PATH"
 
 RUN mkdir bfbridge/
 COPY . bfbridge
 WORKDIR bfbridge
+
+RUN tar -xzvf javahome.tar.gz > /dev/null
+RUN mkdir /graalvm-community-openjdk-20.0.1+9.1
+RUN mv -t /graalvm-community-openjdk-20.0.1+9.1 labsjdk-ce-21-jvmci-23.1-b09/graal/sdk/mxbuild/linux-aarch64/GRAALVM_COMMUNITY_JAVA21/graalvm-community-openjdk-21+28.1/* 
+RUN ls /graalvm-community-openjdk-20.0.1+9.1
+
 #RUN ls /graalvm-community-openjdk-20.0.1+9.1
 RUN javac -cp ".:jar_files/*" org/camicroscope/BFBridge.java
-RUN native-image -cp ".:jar_files/*" --shared -H:Name=libbfbridge org.camicroscope.BFBridge
+RUN native-image -cp ".:jar_files/*" --shared -H:Name=libbfbridge --enable-preview org.camicroscope.BFBridge
 RUN cp -t /usr/local/lib *.so
 RUN cp -t /usr/local/include *.h
 WORKDIR /
