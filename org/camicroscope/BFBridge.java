@@ -510,8 +510,12 @@ public class BFBridge {
     static byte BFInternalDeleteme(IsolateThread t, CCharPointer file) {
         try {
             var s = toJavaString(file);
-            var a = new RandomAccessInputStream(s);
+
+            // Works well:
             //var a = new FileInputStream(s);
+
+            // Doesn't work:
+            var a = new RandomAccessInputStream(s);
             var b = new BufferedInputStream(a, 81920);
             ImageInputStream stream = new MemoryCacheImageInputStream(b);
             return (byte) stream.readBit();
@@ -531,6 +535,10 @@ public class BFBridge {
     // Debug function
     public static byte openFile(String filename) throws Exception {
         try {
+                        var filee = new RandomAccessInputStream(
+                    "/Users/zerf/Desktop/Screenshot 2023-06-30 at 15.31.08.png");
+            ImageInputStream streamold = new MemoryCacheImageInputStream(new BufferedInputStream(filee));
+
             System.out.println("Step 1");
             File path = new File("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/");
             File[] files = path.listFiles();
