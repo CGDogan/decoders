@@ -510,7 +510,8 @@ public class BFBridge {
     static byte BFInternalDeleteme(IsolateThread t, CCharPointer file) {
         try {
             var s = toJavaString(file);
-            var a = new FileInputStream(s);
+            var a = new RandomAccessInputStream(s);
+            //var a = new FileInputStream(s);
             var b = new BufferedInputStream(a, 81920);
             ImageInputStream stream = new MemoryCacheImageInputStream(b);
             return (byte) stream.readBit();
