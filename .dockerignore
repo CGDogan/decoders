@@ -1,0 +1,8 @@
+**/*.class
+bfrecompiled*/
+bf-*
+bugreport/
+generateresolutions/*
+*.h
+*.dylib
+*.so
