@@ -46,7 +46,7 @@ public class BFBridge {
     private static ImageReader reader = new ImageReader();
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
     static {
-        System.setProperty("java.library.path","/bfbridge/");
+        System.setProperty("java.library.path", "/bfbridge/");
         reader.setMetadataStore(metadata);
         // Save file-specific metadata as well?
         // metadata.setOriginalMetadataPopulated(true);
@@ -99,6 +99,8 @@ public class BFBridge {
         } catch (Exception e) {
             lastError = e.toString();
             return -1;
+        } finally {
+            close();
         }
     }
 
@@ -188,6 +190,46 @@ public class BFBridge {
         }
     }
 
+    @CEntryPoint(name = "bf_get_size_z")
+    static int BFGetSizeZ(IsolateThread t) {
+        try {
+            return reader.getSizeZ();
+        } catch (Exception e) {
+            lastError = e.toString();
+            return -1;
+        }
+    }
+
+        @CEntryPoint(name = "bf_get_size_z")
+    static int BFGetSizeT(IsolateThread t) {
+        try {
+            return reader.getSizeT();
+        } catch (Exception e) {
+            lastError = e.toString();
+            return -1;
+        }
+    }
+
+    @CEntryPoint(name = "bf_get_size_c")
+    static int BFGetSizeC(IsolateThread t) {
+        try {
+            return reader.getSizeC();
+        } catch (Exception e) {
+            lastError = e.toString();
+            return -1;
+        }
+    }
+
+    @CEntryPoint(name = "bf_get_effective_size_c")
+    static int BFGetEffectiveSizeC(IsolateThread t) {
+        try {
+            return reader.getEffectiveSizeC();
+        } catch (Exception e) {
+            lastError = e.toString();
+            return -1;
+        }
+    }
+
     @CEntryPoint(name = "bf_get_optimal_tile_width")
     static int BFGetOptimalTileWidth(IsolateThread t) {
         try {
@@ -265,6 +307,7 @@ public class BFBridge {
     }
 
     @CEntryPoint(name = "bf_is_rgb")
+    // if one openbytes call gives multiple colors
     static byte BFIsRGB(IsolateThread t) {
         try {
             return toCBoolean(reader.isRGB());
@@ -513,7 +556,7 @@ public class BFBridge {
             var s = toJavaString(file);
 
             // Works well:
-            //var a = new FileInputStream(s);
+            // var a = new FileInputStream(s);
 
             // Doesn't work:
             var a = new RandomAccessInputStream(s);
@@ -537,7 +580,7 @@ public class BFBridge {
     // Debug function
     public static byte openFile(String filename) throws Exception {
         try {
-                        var filee = new RandomAccessInputStream(
+            var filee = new RandomAccessInputStream(
                     "/Users/zerf/Desktop/Screenshot 2023-06-30 at 15.31.08.png");
             ImageInputStream streamold = new MemoryCacheImageInputStream(new BufferedInputStream(filee));
 
