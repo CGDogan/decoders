@@ -8,6 +8,15 @@
   "methods":[{"name":"main","parameterTypes":["java.lang.String[]"] }]
 },
 {
+  "name": "java.awt.GraphicsEnvironment",
+  "methods": [
+    {
+      "name": "isHeadless",
+      "parameterTypes": []
+    }
+  ]
+},
+{
   "name":"java.awt.image.BufferedImage",
   "fields":[{"name":"colorModel"}, {"name":"imageType"}, {"name":"raster"}],
   "methods":[{"name":"getRGB","parameterTypes":["int","int","int","int","int[]","int","int"] }, {"name":"setRGB","parameterTypes":["int","int","int","int","int[]","int","int"] }]

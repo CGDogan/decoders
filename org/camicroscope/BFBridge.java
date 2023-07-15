@@ -518,6 +518,7 @@ public class BFBridge {
             // Doesn't work:
             var a = new RandomAccessInputStream(s);
             var b = new BufferedInputStream(a, 81920);
+            System.out.println(System.getProperty("java.library.path"));
             ImageInputStream stream = new MemoryCacheImageInputStream(b);
             return (byte) stream.readBit();
         } catch (Exception e) {
