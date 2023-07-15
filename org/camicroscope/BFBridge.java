@@ -46,6 +46,7 @@ public class BFBridge {
     private static ImageReader reader = new ImageReader();
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
     static {
+        System.setProperty("java.library.path","/bfbridge/");
         reader.setMetadataStore(metadata);
         // Save file-specific metadata as well?
         // metadata.setOriginalMetadataPopulated(true);
