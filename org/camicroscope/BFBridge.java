@@ -60,6 +60,26 @@ public class BFBridge {
         return toCString(lastError).get();
     }
 
+    @CEntryPoint(name = "bf_get_communication_buffer")
+    // Memory for data written by Java
+    // Used by BFOpenBytes and BFGetUsedFiles
+    static CCharPointer BFGetCommunicationBuffer(IsolateThread t) {
+        // This does not copy
+        // https://github.com/oracle/graal/blob/492c6016c5d9233be5de2dd9502cc81f746fc8e7/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/c/CTypeConversionSupportImpl.java#L206
+        return toCBytes(communicationBuffer).get();
+    }
+
+    @CEntryPoint(name = "bf_clear_communication_buffer")
+    // If a JVM on this library was to be shared between executables
+    // They would need to clear the buffer before leaving if data can be sensitive
+    // Our iipsrv manages access to the buffer on its own without sharing
+    // and already has access to files so this is not really useful.
+    static void BFClearCommunicationBuffer(IsolateThread t) {
+        for (int i = 0; i < communicationBuffer.length; i++) {
+            communicationBuffer[i] = 0;
+        }
+    }
+
     @CEntryPoint(name = "bf_is_compatible")
     // Please note: this closes the previous file
     static byte BFIsCompatible(IsolateThread t, final CCharPointer filePath) {
@@ -105,9 +125,8 @@ public class BFBridge {
     }
 
     @CEntryPoint(name = "bf_get_used_files")
-    // Returns null-separated files. If two nulls are consecutive, then this means
-    // end of list
-    static CCharPointer BFGetUsedFiles(IsolateThread t) {
+    // Lists null-separated filenames. Returns bytes written including the last null
+    static int BFGetUsedFiles(IsolateThread t) {
         try {
             String[] files = reader.getUsedFiles();
             int charI = 0;
@@ -115,20 +134,17 @@ public class BFBridge {
                 byte[] characters = file.getBytes();
                 if (characters.length + 2 > communicationBuffer.length) {
                     lastError = "Too long";
-                    return WordFactory.nullPointer();
+                    return -2;
                 }
                 for (int i = 0; i < characters.length; i++) {
                     communicationBuffer[charI++] = characters[i];
                 }
                 communicationBuffer[charI++] = 0;
             }
-            for (; charI < communicationBuffer.length; charI++) {
-                communicationBuffer[charI] = 0;
-            }
-            return toCBytes(communicationBuffer).get();
+            return charI;
         } catch (Exception e) {
             lastError = e.toString();
-            return WordFactory.nullPointer();
+            return -1;
         }
     }
 
@@ -200,7 +216,7 @@ public class BFBridge {
         }
     }
 
-        @CEntryPoint(name = "bf_get_size_z")
+    @CEntryPoint(name = "bf_get_size_t")
     static int BFGetSizeT(IsolateThread t) {
         try {
             return reader.getSizeT();
@@ -378,15 +394,14 @@ public class BFBridge {
         }
     }
 
-    // TODO: verify that returning null pointer is OKAY
-    // TODO: return a 10MB array 100 times and see if there are memory leaks
     @CEntryPoint(name = "bf_open_bytes")
-    static CCharPointer BFOpenBytes(IsolateThread t, int x, int y, int w, int h) {
+    static int BFOpenBytes(IsolateThread t, int x, int y, int w, int h) {
         try {
             int size = w * h * FormatTools.getBytesPerPixel(reader.getPixelType()) * reader.getRGBChannelCount();
             if (size > communicationBuffer.length) {
-                lastError = "Requested tile too big; must be at most " + communicationBuffer.length + " bytes";
-                return WordFactory.nullPointer();
+                lastError = "Requested tile too big; must be at most " + communicationBuffer.length
+                        + " bytes but wanted " + size;
+                return -2;
             }
             // TODO: for example for noninterleaved channels, we'll need to handle other
             // planes.
@@ -394,18 +409,12 @@ public class BFBridge {
             // https://downloads.openmicroscopy.org/bio-formats/5.4.1/api/loci/formats/IFormatReader.html#getEffectiveSizeC--
             // and understand the difference between getimagecount and getseriescount
             reader.openBytes(0, communicationBuffer, x, y, w, h);
-            // Erase previous responses
-            for (int i = size; i < communicationBuffer.length; i++) {
-                communicationBuffer[i] = 0;
-            }
-            // This likely does not copy
-            // https://github.com/oracle/graal/blob/492c6016c5d9233be5de2dd9502cc81f746fc8e7/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/c/CTypeConversionSupportImpl.java#L206
-            return toCBytes(communicationBuffer).get();
+            return size;
         } catch (Exception e) {
             lastError = e.toString();
             // This is permitted:
             // https://github.com/oracle/graal/blob/492c6016c5d9233be5de2dd9502cc81f746fc8e7/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/c/CTypeConversionSupportImpl.java#L55
-            return WordFactory.nullPointer();
+            return -1;
         }
     }
 
