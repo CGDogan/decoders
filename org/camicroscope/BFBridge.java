@@ -41,9 +41,11 @@ import org.graalvm.word.WordFactory;
 // to generate when big and when we don't have every layer with ratio 2.5 maybe or maybe 2.1
 
 import loci.common.RandomAccessInputStream;
+import loci.formats.Memoizer;
+
 
 public class BFBridge {
-    private static ImageReader reader = Memoizer(1, new java.io.File("/images/cachedir"));
+    private static IFormatReader reader = new Memoizer(1, new java.io.File("/images/cachedir"));
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
     static {
         System.setProperty("java.library.path", "/bfbridge/");
