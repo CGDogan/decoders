@@ -1,5 +1,8 @@
 [
 {
+  "name":"[Lorg.libjpegturbo.turbojpeg.TJScalingFactor;"
+},
+{
   "name":"com.sun.imageio.plugins.jpeg.JPEGImageReader",
   "methods":[{"name":"acceptPixels","parameterTypes":["int","boolean"] }, {"name":"passComplete","parameterTypes":[] }, {"name":"passStarted","parameterTypes":["int"] }, {"name":"pushBack","parameterTypes":["int"] }, {"name":"readInputData","parameterTypes":["byte[]","int","int"] }, {"name":"setImageData","parameterTypes":["int","int","int","int","int","byte[]"] }, {"name":"skipInputBytes","parameterTypes":["long"] }, {"name":"skipPastImage","parameterTypes":["int"] }, {"name":"warningOccurred","parameterTypes":["int"] }, {"name":"warningWithMessage","parameterTypes":["java.lang.String"] }]
 },
@@ -39,6 +42,10 @@
   "methods":[{"name":"getBoolean","parameterTypes":["java.lang.String"] }]
 },
 {
+  "name":"java.lang.Exception",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String"] }]
+},
+{
   "name":"java.lang.String",
   "methods":[{"name":"lastIndexOf","parameterTypes":["int"] }, {"name":"substring","parameterTypes":["int"] }]
 },
@@ -57,6 +64,14 @@
 {
   "name":"org.camicroscope.BFBridge",
   "methods":[{"name":"main","parameterTypes":["java.lang.String[]"] }]
+},
+{
+  "name":"org.libjpegturbo.turbojpeg.TJDecompressor",
+  "fields":[{"name":"handle"}, {"name":"jpegHeight"}, {"name":"jpegSubsamp"}, {"name":"jpegWidth"}]
+},
+{
+  "name":"org.libjpegturbo.turbojpeg.TJScalingFactor",
+  "fields":[{"name":"denom"}, {"name":"num"}]
 },
 {
   "name":"sun.awt.image.ByteComponentRaster",

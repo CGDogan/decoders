@@ -91,7 +91,7 @@
     "locales":["", "en", "und"]
   }, {
     "name":"org.apache.xml.serializer.XMLEntities",
-    "locales":[""]
+    "locales":["", "und"]
   }, {
     "name":"sun.awt.resources.awt",
     "classNames":["sun.awt.resources.awt"]
