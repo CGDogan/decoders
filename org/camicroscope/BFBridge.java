@@ -87,7 +87,8 @@ public class BFBridge {
             // If we didn't have this line, I would change
             // "private static ImageReader reader" to
             // "private static IFormatReader reader"
-            return toCBoolean(reader.getReader(toJavaString(filePath)) != null);
+            // TODO: replace this line.
+            return toCBoolean((new ImageReader()).getReader(toJavaString(filePath)) != null);
         } catch (Exception e) {
             return toCBoolean(false);
         } finally {
@@ -592,6 +593,10 @@ public class BFBridge {
             var filee = new RandomAccessInputStream(
                     "/Users/zerf/Desktop/Screenshot 2023-06-30 at 15.31.08.png");
             ImageInputStream streamold = new MemoryCacheImageInputStream(new BufferedInputStream(filee));
+            var arr = (new ImageReader()).getPotentialReaders(filee);
+            System.out.println(arr);
+
+            reader.setId("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/OS-1.ndpi.tiff");
 
             System.out.println("Step 1");
             File path = new File("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/");
@@ -599,17 +604,21 @@ public class BFBridge {
             System.out.println("Dirlist: " + Arrays.toString(files));
             for (int i = 0; i < files.length; i++) {
                 if (files[i].isFile()) {
+                    try {
                     System.out.println("LLOP" + i);
 
-                    reader.setFlattenedResolutions(false);
-                    reader.getReader(files[i].getAbsolutePath());
+                    //reader.getReader(files[i].getAbsolutePath());
                     close();
+                    reader.setFlattenedResolutions(false);
 
                     reader.setId((files[i]).getAbsolutePath());
 
                     // reader.setMetadataStore(metadata);
                     System.out.println(files[i].getAbsolutePath());
                     close();
+                    } catch(Exception e) {
+                        System.out.println(e.toString());
+                    }
                 }
             }
             // reader.getReader("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/out2ewfrerwf_tiff_conv.tif");
