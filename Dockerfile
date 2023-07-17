@@ -28,7 +28,7 @@ WORKDIR bfbridge
 RUN ls /graalvm-community-openjdk-20.0.1+9.1
 
 RUN javac -cp ".:jar_files/*" org/camicroscope/BFBridge.java
-RUN native-image -cp ".:jar_files/*" --shared -H:Name=libbfbridge  --enable-preview org.camicroscope.BFBridge
+RUN native-image -cp ".:jar_files/*" --shared -H:Name=libbfbridge  --initialize-at-run-time=sun.awt --initialize-at-run-time=javax.imageio.ImageIO --initialize-at-run-time=java.awt --initialize-at-run-time=com.sun.imageio --initialize-at-run-time=sun.java2d --initialize-at-run-time=sun.font --initialize-at-run-time=loci.formats.gui.AWTImageTools --initialize-at-run-time=ome.specification.XMLMockObjects --initialize-at-run-time=ome.codecs.gui.AWTImageTools --initialize-at-run-time=javax.imageio.ImageTypeSpecifier --initialize-at-build-time --enable-preview org.camicroscope.BFBridge
 RUN ls
 RUN cp -t /usr/local/lib *.so
 RUN cp -t /usr/local/include *.h
