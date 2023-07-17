@@ -43,7 +43,7 @@ import org.graalvm.word.WordFactory;
 import loci.common.RandomAccessInputStream;
 
 public class BFBridge {
-    private static ImageReader reader = Memoizer(1, new java.io.File("/images/cachedir"));
+    private static ImageReader reader = new ImageReader();
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
     static {
         System.setProperty("java.library.path", "/bfbridge/");
