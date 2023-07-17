@@ -3,9 +3,6 @@
   "name":"[Lcom.sun.tools.javac.jvm.PoolConstant$LoadableConstant;"
 },
 {
-  "name":"[Ljava.lang.String;"
-},
-{
   "name":"[Lloci.formats.tiff.OnDemandLongArray;"
 },
 {
@@ -18,43 +15,11 @@
   "name":"[[Lloci.formats.tiff.TiffRational;"
 },
 {
-  "name":"ch.epfl.biop.formats.in.ZeissQuickStartCZIReader"
-},
-{
-  "name":"java.io.FilePermission"
-},
-{
-  "name":"java.lang.RuntimePermission"
-},
-{
   "name":"java.lang.Thread",
   "fields":[{"name":"threadLocalRandomProbe"}]
 },
 {
-  "name":"java.lang.Throwable",
-  "methods":[{"name":"getSuppressed","parameterTypes":[] }]
-},
-{
-  "name":"java.net.NetPermission"
-},
-{
-  "name":"java.net.SocketPermission"
-},
-{
-  "name":"java.net.URLPermission",
-  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String"] }]
-},
-{
-  "name":"java.security.AllPermission"
-},
-{
   "name":"java.security.SecureRandomParameters"
-},
-{
-  "name":"java.security.SecurityPermission"
-},
-{
-  "name":"java.util.PropertyPermission"
 },
 {
   "name":"java.util.concurrent.atomic.AtomicBoolean",
@@ -77,9 +42,6 @@
 },
 {
   "name":"javax.imageio.spi.ImageWriterSpi"
-},
-{
-  "name":"javax.smartcardio.CardPermission"
 },
 {
   "name":"loci.common.services.S3ClientService"
