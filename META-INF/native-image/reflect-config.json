@@ -21,18 +21,6 @@
   "name":"ch.epfl.biop.formats.in.ZeissQuickStartCZIReader"
 },
 {
-  "name": "com.esotericsoftware.kryo.serializers.DefaultSerializers$ClassSerializer",
-  "allDeclaredConstructors": true
-},
-{
-  "name": "com.esotericsoftware.kryo.serializers.DefaultSerializers$IntSerializer",
-  "allDeclaredConstructors": true
-},
-{
-  "name": "com.esotericsoftware.kryo.serializers.DefaultSerializers$StringSerializer",
-  "allDeclaredConstructors": true
-},
-{
   "name":"java.io.FilePermission"
 },
 {
@@ -128,10 +116,6 @@
 },
 {
   "name":"loci.common.services.S3ClientServiceImpl"
-},
-{
-  "name": "loci.formats.ImageReader",
-  "allDeclaredConstructors": true
 },
 {
   "name":"loci.formats.in.AFIReader",
