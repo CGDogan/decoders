@@ -28,6 +28,8 @@ import org.graalvm.nativeimage.c.function.CEntryPoint;
 import org.graalvm.nativeimage.IsolateThread;
 import org.graalvm.word.WordFactory;
 
+//import org.camicroscope.TJUnitTest;
+
 // https://bio-formats.readthedocs.io/en/v6.14.0/developers/file-reader.html#reading-files
 // There are other utilities as well
 
@@ -47,6 +49,8 @@ public class BFBridge {
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
     static {
         System.setProperty("java.library.path", "/bfbridge/");
+        // Use the easier resolution API
+        reader.setFlattenedResolutions(false);
         reader.setMetadataStore(metadata);
         // Save file-specific metadata as well?
         // metadata.setOriginalMetadataPopulated(true);
@@ -100,8 +104,8 @@ public class BFBridge {
     // Do not open another file without closing current
     static byte BFOpen(IsolateThread t, final CCharPointer filePath) {
         try {
-            // Use the easier resolution API
-            reader.setFlattenedResolutions(false);
+            // TODO DEBUG line
+            System.out.println("Opening file: " + toJavaString(filePath));
             reader.setId(toJavaString(filePath));
             // reader.setMetadataStore(metadata);
             return toCBoolean(true);
@@ -590,13 +594,39 @@ public class BFBridge {
     // Debug function
     public static byte openFile(String filename) throws Exception {
         try {
-            var filee = new RandomAccessInputStream(
+            /*var filee = new RandomAccessInputStream(
                     "/Users/zerf/Desktop/Screenshot 2023-06-30 at 15.31.08.png");
             ImageInputStream streamold = new MemoryCacheImageInputStream(new BufferedInputStream(filee));
             var arr = (new ImageReader()).getPotentialReaders(filee);
             System.out.println(arr);
+            reader.setFlattenedResolutions(false);
 
             reader.setId("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/OS-1.ndpi.tiff");
+            reader.setResolution(1);
+            byte[] bytes = new byte[3145728];
+            reader.openBytes(0, bytes, 51200, 30720, 1024, 1024);
+*/
+           reader.setFlattenedResolutions(false);
+
+        
+
+            if (! new File("/images/OS-1.ndpi.tiff").isFile()) {
+System.out.println("file not found!");
+            }
+
+                     File path2 = new File("/");
+            File[] files2 = path2.listFiles();
+            System.out.println("Dirlist: " + Arrays.toString(files2));
+
+            File path1 = new File("/images/");
+            File[] files1 = path1.listFiles();
+            System.out.println("Dirlist: " + Arrays.toString(files1));
+
+            reader.setId("/images/OS-1.ndpi.tiff");
+            reader.setResolution(3);
+            byte[] bytes = new byte[3145728];
+            reader.openBytes(0, bytes, 81920, 49152, 1024, 1024);
+            //TJUnitTest.main(new String[0]);
 
             System.out.println("Step 1");
             File path = new File("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/");
