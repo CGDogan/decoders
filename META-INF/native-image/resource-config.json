@@ -27,9 +27,15 @@
   }, {
     "pattern":"\\QMETA-INF/services/java.nio.file.spi.FileSystemProvider\\E"
   }, {
+    "pattern":"\\QMETA-INF/services/javax.xml.parsers.DocumentBuilderFactory\\E"
+  }, {
     "pattern":"\\QMETA-INF/services/javax.xml.parsers.SAXParserFactory\\E"
   }, {
     "pattern":"\\QMETA-INF/services/javax.xml.transform.TransformerFactory\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/org.apache.xml.dtm.DTMManager\\E"
+  }, {
+    "pattern":"\\QMETA-INF/services/org.xml.sax.driver\\E"
   }, {
     "pattern":"\\Qloci/common/services/services.properties\\E"
   }, {
@@ -39,11 +45,35 @@
   }, {
     "pattern":"\\Qloci/formats/readers.txt\\E"
   }, {
+    "pattern":"\\Qorg/apache/xml/serializer/Encodings.properties\\E"
+  }, {
+    "pattern":"\\Qorg/apache/xml/serializer/output_text.properties\\E"
+  }, {
+    "pattern":"\\Qorg/apache/xml/serializer/output_unknown.properties\\E"
+  }, {
+    "pattern":"\\Qorg/apache/xml/serializer/output_xml.properties\\E"
+  }, {
     "pattern":"\\Qorg/joda/time/tz/data/Europe/London\\E"
   }, {
     "pattern":"\\Qorg/joda/time/tz/data/ZoneInfoMap\\E"
   }, {
     "pattern":"\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E"
+  }, {
+    "pattern":"\\Qtransforms/2008-09-to-2009-09.xsl\\E"
+  }, {
+    "pattern":"\\Qtransforms/2009-09-to-2010-04.xsl\\E"
+  }, {
+    "pattern":"\\Qtransforms/2010-04-to-2010-06.xsl\\E"
+  }, {
+    "pattern":"\\Qtransforms/2010-06-to-2011-06.xsl\\E"
+  }, {
+    "pattern":"\\Qtransforms/2011-06-to-2012-06.xsl\\E"
+  }, {
+    "pattern":"\\Qtransforms/2012-06-to-2013-06.xsl\\E"
+  }, {
+    "pattern":"\\Qtransforms/2013-06-to-2015-01.xsl\\E"
+  }, {
+    "pattern":"\\Qtransforms/2015-01-to-2016-06.xsl\\E"
   }, {
     "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt72b/nfc.nrm\\E"
   }]},
@@ -59,6 +89,9 @@
   }, {
     "name":"org.apache.xerces.impl.msg.XMLMessages",
     "locales":["", "en", "und"]
+  }, {
+    "name":"org.apache.xml.serializer.XMLEntities",
+    "locales":[""]
   }, {
     "name":"sun.awt.resources.awt",
     "classNames":["sun.awt.resources.awt"]
