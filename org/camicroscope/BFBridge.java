@@ -45,19 +45,31 @@ import org.graalvm.word.WordFactory;
 import loci.common.RandomAccessInputStream;
 
 public class BFBridge {
-    private static ImageReader reader = new ImageReader();
+    private static ImageReader reader = null; // see optimizing.md
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
     static {
+        // I'm surprised that this works in a static block:
         System.setProperty("java.library.path", "/bfbridge/");
-        // Use the easier resolution API
-        reader.setFlattenedResolutions(false);
-        reader.setMetadataStore(metadata);
-        // Save file-specific metadata as well?
-        // metadata.setOriginalMetadataPopulated(true);
     }
 
     private static String lastError = "";
     private static byte[] communicationBuffer = new byte[10000000];
+
+    @CEntryPoint(name = "bf_initialize")
+    static byte BFInitialize(IsolateThread t) {
+        try {
+            reader = new ImageReader();
+            // Use the easier resolution API
+            reader.setFlattenedResolutions(false);
+            reader.setMetadataStore(metadata);
+            // Save file-specific metadata as well?
+            // metadata.setOriginalMetadataPopulated(true);
+            return toCBoolean(true);
+        } catch (Exception e) {
+            lastError = e.toString();
+            return toCBoolean(false);
+        }
+    }
 
     @CEntryPoint(name = "bf_get_error")
     static CCharPointer BFGetError(IsolateThread t) {
@@ -91,8 +103,7 @@ public class BFBridge {
             // If we didn't have this line, I would change
             // "private static ImageReader reader" to
             // "private static IFormatReader reader"
-            // TODO: replace this line.
-            return toCBoolean((new ImageReader()).getReader(toJavaString(filePath)) != null);
+            return toCBoolean(reader.getReader(toJavaString(filePath)) != null);
         } catch (Exception e) {
             return toCBoolean(false);
         } finally {
@@ -567,6 +578,10 @@ public class BFBridge {
     @CEntryPoint(name = "bfinternal_deleteme")
     static byte BFInternalDeleteme(IsolateThread t, CCharPointer file) {
         try {
+            System.out.println("Making class");
+            System.out.println(new org.libjpegturbo.turbojpeg.TJDecompressor());
+            System.out.println("Made class");
+
             var s = toJavaString(file);
 
             // Works well:
@@ -594,27 +609,31 @@ public class BFBridge {
     // Debug function
     public static byte openFile(String filename) throws Exception {
         try {
-            /*var filee = new RandomAccessInputStream(
-                    "/Users/zerf/Desktop/Screenshot 2023-06-30 at 15.31.08.png");
-            ImageInputStream streamold = new MemoryCacheImageInputStream(new BufferedInputStream(filee));
-            var arr = (new ImageReader()).getPotentialReaders(filee);
-            System.out.println(arr);
-            reader.setFlattenedResolutions(false);
+            /*
+             * var filee = new RandomAccessInputStream(
+             * "/Users/zerf/Desktop/Screenshot 2023-06-30 at 15.31.08.png");
+             * ImageInputStream streamold = new MemoryCacheImageInputStream(new
+             * BufferedInputStream(filee));
+             * var arr = (new ImageReader()).getPotentialReaders(filee);
+             * System.out.println(arr);
+             * reader.setFlattenedResolutions(false);
+             * 
+             * reader.setId(
+             * "/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/OS-1.ndpi.tiff"
+             * );
+             * reader.setResolution(1);
+             * byte[] bytes = new byte[3145728];
+             * reader.openBytes(0, bytes, 51200, 30720, 1024, 1024);
+             */
+            System.out.println("Making class");
+            System.out.println(new org.libjpegturbo.turbojpeg.TJDecompressor());
+            System.out.println("Made class");
 
-            reader.setId("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/OS-1.ndpi.tiff");
-            reader.setResolution(1);
-            byte[] bytes = new byte[3145728];
-            reader.openBytes(0, bytes, 51200, 30720, 1024, 1024);
-*/
-           reader.setFlattenedResolutions(false);
-
-        
-
-            if (! new File("/images/OS-1.ndpi.tiff").isFile()) {
-System.out.println("file not found!");
+            if (!new File("/images/OS-1.ndpi.tiff").isFile()) {
+                System.out.println("file not found!");
             }
 
-                     File path2 = new File("/");
+            File path2 = new File("/");
             File[] files2 = path2.listFiles();
             System.out.println("Dirlist: " + Arrays.toString(files2));
 
@@ -622,11 +641,12 @@ System.out.println("file not found!");
             File[] files1 = path1.listFiles();
             System.out.println("Dirlist: " + Arrays.toString(files1));
 
+            // http://127.0.0.1:4010/img/IIP/raw/?DeepZoom=/images/OS-1.ndpi.tiff_files/17/76_16.jpg
             reader.setId("/images/OS-1.ndpi.tiff");
-            reader.setResolution(3);
+            reader.setResolution(0);
             byte[] bytes = new byte[3145728];
-            reader.openBytes(0, bytes, 81920, 49152, 1024, 1024);
-            //TJUnitTest.main(new String[0]);
+            reader.openBytes(0, bytes, 77824, 16384, 1024, 1024);
+            // TJUnitTest.main(new String[0]);
 
             System.out.println("Step 1");
             File path = new File("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/");
@@ -635,18 +655,18 @@ System.out.println("file not found!");
             for (int i = 0; i < files.length; i++) {
                 if (files[i].isFile()) {
                     try {
-                    System.out.println("LLOP" + i);
+                        System.out.println("LLOP" + i);
 
-                    //reader.getReader(files[i].getAbsolutePath());
-                    close();
-                    reader.setFlattenedResolutions(false);
+                        // reader.getReader(files[i].getAbsolutePath());
+                        close();
+                        reader.setFlattenedResolutions(false);
 
-                    reader.setId((files[i]).getAbsolutePath());
+                        reader.setId((files[i]).getAbsolutePath());
 
-                    // reader.setMetadataStore(metadata);
-                    System.out.println(files[i].getAbsolutePath());
-                    close();
-                    } catch(Exception e) {
+                        // reader.setMetadataStore(metadata);
+                        System.out.println(files[i].getAbsolutePath());
+                        close();
+                    } catch (Exception e) {
                         System.out.println(e.toString());
                     }
                 }
