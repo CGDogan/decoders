@@ -67,7 +67,10 @@
 },
 {
   "name":"org.libjpegturbo.turbojpeg.TJDecompressor",
-  "fields":[{"name":"handle"}, {"name":"jpegHeight"}, {"name":"jpegSubsamp"}, {"name":"jpegWidth"}]
+  "fields":[{"name":"handle"}, {"name":"jpegHeight"}, {"name":"jpegSubsamp"}, {"name":"jpegWidth"}],
+  "methods": [{"name":"init",
+      "parameterTypes": []
+    }]
 },
 {
   "name":"org.libjpegturbo.turbojpeg.TJScalingFactor",
