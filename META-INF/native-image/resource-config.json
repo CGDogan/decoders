@@ -88,10 +88,10 @@
     "classNames":["com.sun.tools.javac.resources.launcher"]
   }, {
     "name":"org.apache.xerces.impl.msg.XMLMessages",
-    "locales":["", "en", "und"]
+    "locales":["en", "und"]
   }, {
     "name":"org.apache.xml.serializer.XMLEntities",
-    "locales":["", "und"]
+    "locales":["und"]
   }, {
     "name":"sun.awt.resources.awt",
     "classNames":["sun.awt.resources.awt"]
