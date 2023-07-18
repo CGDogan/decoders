@@ -48,8 +48,11 @@ public class BFBridge {
     private static ImageReader reader = null; // see optimizing.md
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
     static {
-        // I'm surprised that this works in a static block:
-        System.setProperty("java.library.path", "/bfbridge/");
+        // load .so files compiled along
+        // alternatively, for our Docker:
+        // System.setProperty("java.library.path", "/bfbridge/");
+        System.setProperty("java.library.path", "/usr/local/lib/");
+        // I'm surprised that System.setProperty works in a static block
     }
 
     private static String lastError = "";
