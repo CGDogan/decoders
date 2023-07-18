@@ -69,3 +69,71 @@ Adding this to build args, we get lines such as:
 The last lines are important: `java.awt.event.MouseEvent`, `javax.imageio.ImageIO`. We can choose to be more general and skip `java.awt` and `javax.imageio`. Adding these to arguments and removing the trace argument, we get more "class X not optimized was required, run trace", so we again add the summarized trace flag, find what root classes required them, remove the trace flag add them as no-optimize flags, repeat.
 
 Updating JDK or updating BioFormats and its libraries might require one or two iterations more
+
+## JNI problems
+
+You may call a Java function that does "new org.libjpegturbo.turbojpeg.TJDecompressor()" from C to see if JNI works properly (at least for the function org.libjpegturbo.turbojpeg.TJDecompressor.init())
+
+Java has class instance code, which are constructors and methods. There's also a different category: classloader code, which are static variables and static blocks such as in
+
+```
+class Hi {
+  static int a = 3;
+  static {
+    a = 4;
+  }
+}
+```
+
+(Static code of classes are code that is run at most once per class per program execution in Java, no matter how many times they're instantiatied)
+
+GraalVM can initialize classes at build time, which involves running these at build time.[As reported](https://github.com/oracle/graal/issues/7015), GraalVM allows this (instead of showing an error) but it does not work at runtime:
+
+```
+class Hi {
+  static {
+    System.loadLibrary("/libabc.so");
+  }
+}
+```
+
+https://github.com/ome/bioformats/blob/v6.14.0/components/formats-bsd/src/loci/formats/services/JPEGTurboServiceImpl.java#L104-L111 is the relevant part in BioFormats (and not [this](https://github.com/ome/bioformats/blob/v6.14.0/components/forks/turbojpeg/src/org/libjpegturbo/turbojpeg/TJLoader.java#L56-L58), this is commented out)
+
+This code works well with GraalVM because this is not in a static block. But if we do:
+
+```
+class caMicroscope {
+  static ImageReader r = new ImageReader();
+}
+```
+
+This will fail at runtime and this can be detected the way I mentioned. This is because "new ImageReader()" is static code (i.e. classloader code) so it requires JPEGTurboServiceImpl.java's non-static code to be run also as static code.
+
+Against this, build, after BioFormats updates, also with "--initialize-at-run-time=org.scijava.nativelib.NativeLibraryUtil" as this will block the whole dynamic loader library from running at compile time. If it then doesn't compile, run "--trace-class-initialization=org.scijava.nativelib.NativeLibraryUtil" and see the root cause at the bottom; either it's possible to change our code, for example from `static Reader r = new Reader();` to 
+
+```
+static Reader r = null;
+boolean rInitialized = false;
+
+// Do not call me in static blocks
+void initializeReader() {
+  if (!rInitialized)
+    r = new Reader();
+    rInitialized = true;
+  }
+}
+```
+
+or: the problem was due to a code change in BioFormats. For example, they now added:
+
+```
+class Wrap {
+  static Reader r = new Reader();
+}
+```
+
+in which case add to build flags: `--initialize-at-run-time=org.bioformats.XXX.Wrap`, and as in the beginning of the document, this may require other packages to be `initialize-at-run-time` as well.
+
+But do not build in production with `--initialize-at-run-time=org.scijava.nativelib.NativeLibraryUtil`, as we would like to run as much static code as feasible at build time and this library doesn't call System.load() in any static blocks.
+
+Small note: We can do --initialize-at-run-time=org.scijava.nativelib.NativeLibraryUtil for one development build and see what exactly requires System.load at compile time because NativeLibraryUtil has all members static so it cannot be instantiated so if it runs at compile time, it's because some code wanted to load a library (and not instantiate this class, which would be nonbreaking)
