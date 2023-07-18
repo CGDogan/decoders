@@ -56,12 +56,16 @@ public class BFBridge {
     private static byte[] communicationBuffer = new byte[10000000];
 
     @CEntryPoint(name = "bf_initialize")
+    // Does nothing if not initialized
+    // Won't reset, use BFClearCommunicationBuffer and BFClose for that
     static byte BFInitialize(IsolateThread t) {
         try {
-            reader = new ImageReader();
-            // Use the easier resolution API
-            reader.setFlattenedResolutions(false);
-            reader.setMetadataStore(metadata);
+            if (reader == null) {
+                reader = new ImageReader();
+                // Use the easier resolution API
+                reader.setFlattenedResolutions(false);
+                reader.setMetadataStore(metadata);
+            }
             // Save file-specific metadata as well?
             // metadata.setOriginalMetadataPopulated(true);
             return toCBoolean(true);
