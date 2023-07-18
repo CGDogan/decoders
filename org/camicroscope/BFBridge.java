@@ -109,7 +109,8 @@ public class BFBridge {
             // "private static IFormatReader reader"
             return toCBoolean(reader.getReader(toJavaString(filePath)) != null);
         } catch (Exception e) {
-            return toCBoolean(false);
+            lastError = e.toString();
+            return -1;
         } finally {
             close();
         }
