@@ -7,6 +7,7 @@ import loci.formats.MetadataTools;
 import loci.formats.meta.IMetadata;
 import ome.units.UNITS;
 import org.graalvm.nativeimage.c.type.CTypeConversion.CCharPointerHolder;
+import com.oracle.svm.core.handles.PrimitiveArrayView;
 import static org.graalvm.nativeimage.c.type.CTypeConversion.toCString; // Watch out for memory leaks
 import static org.graalvm.nativeimage.c.type.CTypeConversion.toCBytes; // Likewise
 import static org.graalvm.nativeimage.c.type.CTypeConversion.toCBoolean;
@@ -83,7 +84,7 @@ public class BFBridge {
         try {
             System.out.println("See if saving to buffer doesn't require a copy...");
             // https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/handles/PrimitiveArrayView.java
-            if (toCBytes(communicationBuffer).isCopy()) {
+            if (new PrimitiveArrayView.createForReading(new byte[10]).isCopy()) {
                 System.out.println("Correct");
             } else {
                 throw new Exception();
