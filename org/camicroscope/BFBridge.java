@@ -6,6 +6,7 @@ import loci.formats.FormatTools; // https://downloads.openmicroscopy.org/bio-for
 import loci.formats.MetadataTools;
 import loci.formats.meta.IMetadata;
 import ome.units.UNITS;
+import org.graalvm.nativeimage.c.type.CTypeConversion.CCharPointerHolder;
 import static org.graalvm.nativeimage.c.type.CTypeConversion.toCString; // Watch out for memory leaks
 import static org.graalvm.nativeimage.c.type.CTypeConversion.toCBytes; // Likewise
 import static org.graalvm.nativeimage.c.type.CTypeConversion.toCBoolean;
@@ -18,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.function.Function;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
@@ -55,7 +57,9 @@ public class BFBridge {
         // I'm surprised that System.setProperty works in a static block
     }
 
-    private static String lastError = "";
+    private static CCharPointerHolder lastError = toCBytes(null);
+    // private static Runnable lastErrorFreer = () -> {};
+
     // See the file
     // https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/handles/PrimitiveArrayView.java
     // currently uses createForReading and hence unsuitable for communication
@@ -73,7 +77,7 @@ public class BFBridge {
             new org.libjpegturbo.turbojpeg.TJDecompressor();
             System.out.println("Yes");
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
         try {
@@ -112,14 +116,15 @@ public class BFBridge {
             // metadata.setOriginalMetadataPopulated(true);
             return toCBoolean(true);
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
+
             return toCBoolean(false);
         }
     }
 
     @CEntryPoint(name = "bf_get_error")
     static CCharPointer BFGetError(IsolateThread t) {
-        return toCString(lastError).get();
+        return lastError.get();
     }
 
     @CEntryPoint(name = "bf_get_communication_buffer")
@@ -151,7 +156,7 @@ public class BFBridge {
             // "private static IFormatReader reader"
             return toCBoolean(reader.getReader(toJavaString(filePath)) != null);
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         } finally {
             close();
@@ -184,7 +189,7 @@ public class BFBridge {
             // reader.setMetadataStore(metadata);
             return toCBoolean(true);
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             close();
             return toCBoolean(false);
         }
@@ -196,7 +201,7 @@ public class BFBridge {
         try {
             return toCBoolean(reader.isSingleFile(toJavaString(filePath)));
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         } finally {
             close();
@@ -212,7 +217,7 @@ public class BFBridge {
             for (String file : files) {
                 byte[] characters = file.getBytes();
                 if (characters.length + 2 > communicationBuffer.length) {
-                    lastError = "Too long";
+                    saveError("Too long");
                     return -2;
                 }
                 for (int i = 0; i < characters.length; i++) {
@@ -222,7 +227,7 @@ public class BFBridge {
             }
             return charI;
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -233,7 +238,7 @@ public class BFBridge {
             reader.close(fileOnly != 0);
             return toCBoolean(true);
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return toCBoolean(false);
         }
     }
@@ -246,7 +251,7 @@ public class BFBridge {
             // This method returns resolution counts for the current series
             return reader.getResolutionCount();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -259,7 +264,7 @@ public class BFBridge {
             reader.setResolution(resIndex);
             return toCBoolean(true);
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return toCBoolean(false);
         }
     }
@@ -270,7 +275,7 @@ public class BFBridge {
             // For current resolution
             return reader.getSizeX();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -280,7 +285,7 @@ public class BFBridge {
         try {
             return reader.getSizeY();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -290,7 +295,7 @@ public class BFBridge {
         try {
             return reader.getSizeZ();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -300,7 +305,7 @@ public class BFBridge {
         try {
             return reader.getSizeT();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -310,7 +315,7 @@ public class BFBridge {
         try {
             return reader.getSizeC();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -320,7 +325,7 @@ public class BFBridge {
         try {
             return reader.getEffectiveSizeC();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -330,7 +335,7 @@ public class BFBridge {
         try {
             return reader.getOptimalTileWidth();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -340,7 +345,7 @@ public class BFBridge {
         try {
             return reader.getOptimalTileHeight();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -350,7 +355,7 @@ public class BFBridge {
         try {
             return toCString(reader.getFormat()).get();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return WordFactory.nullPointer();
         }
     }
@@ -360,7 +365,7 @@ public class BFBridge {
         try {
             return reader.getPixelType();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -376,7 +381,7 @@ public class BFBridge {
         try {
             return reader.getBitsPerPixel();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -386,7 +391,7 @@ public class BFBridge {
         try {
             return FormatTools.getBytesPerPixel(reader.getPixelType());
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -396,7 +401,7 @@ public class BFBridge {
         try {
             return reader.getRGBChannelCount();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -407,7 +412,7 @@ public class BFBridge {
         try {
             return toCBoolean(reader.isRGB());
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -417,7 +422,7 @@ public class BFBridge {
         try {
             return toCBoolean(reader.isInterleaved());
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -427,7 +432,7 @@ public class BFBridge {
         try {
             return toCBoolean(reader.isLittleEndian());
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -437,7 +442,7 @@ public class BFBridge {
         try {
             return toCBoolean(FormatTools.isFloatingPoint(reader));
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -448,7 +453,7 @@ public class BFBridge {
         try {
             return toCBoolean(reader.isNormalized());
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -458,7 +463,7 @@ public class BFBridge {
         try {
             return toCString(reader.getDimensionOrder()).get();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return WordFactory.nullPointer();
         }
     }
@@ -468,7 +473,7 @@ public class BFBridge {
         try {
             return toCBoolean(reader.isOrderCertain());
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -478,8 +483,8 @@ public class BFBridge {
         try {
             int size = w * h * FormatTools.getBytesPerPixel(reader.getPixelType()) * reader.getRGBChannelCount();
             if (size > communicationBuffer.length) {
-                lastError = "Requested tile too big; must be at most " + communicationBuffer.length
-                        + " bytes but wanted " + size;
+                saveError("Requested tile too big; must be at most " + communicationBuffer.length
+                        + " bytes but wanted " + size);
                 return -2;
             }
             // TODO: for example for noninterleaved channels, we'll need to handle other
@@ -490,7 +495,7 @@ public class BFBridge {
             reader.openBytes(0, communicationBuffer, x, y, w, h);
             return size;
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             // This is permitted:
             // https://github.com/oracle/graal/blob/492c6016c5d9233be5de2dd9502cc81f746fc8e7/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/c/CTypeConversionSupportImpl.java#L55
             return -1;
@@ -514,7 +519,7 @@ public class BFBridge {
             }
             return size.value(UNITS.MICROMETER).doubleValue() / reader.getSizeX();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1d;
         }
 
@@ -530,7 +535,7 @@ public class BFBridge {
             }
             return size.value(UNITS.MICROMETER).doubleValue() / reader.getSizeY();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1d;
         }
 
@@ -546,7 +551,7 @@ public class BFBridge {
             }
             return size.value(UNITS.MICROMETER).doubleValue() / reader.getSizeZ();
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1d;
         }
     }
@@ -561,7 +566,7 @@ public class BFBridge {
                 return toCString(file).get();
             }
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return WordFactory.nullPointer();
         }
     }
@@ -571,7 +576,7 @@ public class BFBridge {
         try {
             return toCBoolean(reader.getCurrentFile() == null);
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -605,7 +610,7 @@ public class BFBridge {
             }
             return toCBoolean(shouldGenerate);
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return -1;
         }
     }
@@ -633,7 +638,7 @@ public class BFBridge {
             reader.setId(outPath);
             return toCBoolean(true);
         } catch (Exception e) {
-            lastError = e.toString();
+            saveError(e.toString());
             return toCBoolean(false);
         }
     }
@@ -758,6 +763,11 @@ public class BFBridge {
             System.out.println("excepting incoming");
             throw e;
         }
+    }
+
+    private static void saveError(String s) {
+        lastError.close();
+        lastError = toCString(s);
     }
 
     public static void main(String args[]) throws Exception {
