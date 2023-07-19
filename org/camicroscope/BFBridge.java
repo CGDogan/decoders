@@ -56,7 +56,46 @@ public class BFBridge {
     }
 
     private static String lastError = "";
+    // See the file
+    // https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/handles/PrimitiveArrayView.java
+    // currently uses createForReading and hence unsuitable for communication
+    // from C
     private static byte[] communicationBuffer = new byte[10000000];
+
+    @CEntryPoint(name = "bf_test")
+    // see if this library works. Run this after BFClearCommunicationBuffer if not
+    // fresh. The last check should be done at C side:
+    // call bf_get_communication_buffer before and after this method
+    // and compare
+    static byte BFTest(IsolateThread t) {
+        try {
+            System.out.println("See if JNI works...");
+            new org.libjpegturbo.turbojpeg.TJDecompressor();
+            System.out.println("Yes");
+        } catch (Exception e) {
+            lastError = e.toString();
+            return -1;
+        }
+        try {
+            System.out.println("See if saving to buffer doesn't require a copy...");
+            // https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/handles/PrimitiveArrayView.java
+            if (toCBytes(communicationBuffer).isCopy()) {
+                System.out.println("Correct");
+            } else {
+                throw new Exception();
+            }
+        } catch (Exception e) {
+            // This is perhaps just a performance problem
+        }
+        System.out.println("See if buffer updates...");
+        for (int i = 0; i < 10; i++) {
+            communicationBuffer[i] = (byte) i;
+        }
+        // Verify this in C
+        // If not, we need to call bf_get_communication_buffer from C
+        // whenever we need to access its value
+        return 0;
+    }
 
     @CEntryPoint(name = "bf_initialize")
     // Does nothing if not initialized
@@ -118,6 +157,22 @@ public class BFBridge {
             close();
         }
     }
+
+    /*
+     * bf_is_compatible_disregarding_filename:
+     * I think not needed?
+     * Loop over IFormatReaders
+     * use IFormatreader.isthistype with stream type
+     * 
+     * 
+     * List<IFormatReader> potentialReaders = new ArrayList<IFormatReader>();
+     * for (int i=0; i<readers.length; i++) {
+     * if (isThisType(readers[i], stream)) potentialReaders.add(readers[i]);
+     * }
+     * IFormatReader[] readers = new IFormatReader[potentialReaders.size()];
+     * potentialReaders.toArray(readers);
+     * return readers;
+     */
 
     @CEntryPoint(name = "bf_open")
     // Do not open another file without closing current
