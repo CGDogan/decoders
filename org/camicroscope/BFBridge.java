@@ -5,9 +5,9 @@ import loci.formats.ImageReader;
 import loci.formats.FormatTools; // https://downloads.openmicroscopy.org/bio-formats/latest/api/loci/formats/FormatTools.html
 import loci.formats.MetadataTools;
 import loci.formats.meta.IMetadata;
+import loci.formats.services.JPEGTurboServiceImpl;
 import ome.units.UNITS;
 import org.graalvm.nativeimage.c.type.CTypeConversion.CCharPointerHolder;
-import com.oracle.svm.core.handles.PrimitiveArrayView;
 import static org.graalvm.nativeimage.c.type.CTypeConversion.toCString; // Watch out for memory leaks
 import static org.graalvm.nativeimage.c.type.CTypeConversion.toCBytes; // Likewise
 import static org.graalvm.nativeimage.c.type.CTypeConversion.toCBoolean;
@@ -39,24 +39,20 @@ import org.graalvm.word.WordFactory;
 // How does GraalVM isolates and threads work?
 // https://medium.com/graalvm/isolates-and-compressed-references-more-flexible-and-efficient-memory-management-for-graalvm-a044cc50b67e
 
-// TODO: we return error messages in C pointers; how to free these from C?
-
-// TODO: Test the bioformats server with the subresolutions.java divide-by-three file maybe?
-// TODO: test reading a big file without subresolutions. we should handle
-// to generate when big and when we don't have every layer with ratio 2.5 maybe or maybe 2.1
-
 import loci.common.RandomAccessInputStream;
 
 public class BFBridge {
     private static ImageReader reader = null; // see optimizing.md
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
-    static {
-        // load .so files compiled along
-        // alternatively, for our Docker:
-        // System.setProperty("java.library.path", "/bfbridge/");
-        System.setProperty("java.library.path", "/usr/local/lib/");
-        // I'm surprised that System.setProperty works in a static block
-    }
+    /*
+     * static {
+     * load .so files compiled along
+     * alternatively, for our Docker:
+     * System.setProperty("java.library.path", "/bfbridge/");
+     * System.setProperty("java.library.path", "/usr/local/lib/");
+     * This can be (should be? for graal) moved out of a static block
+     * }
+     */
 
     private static CCharPointerHolder lastError = toCBytes(null);
     // private static Runnable lastErrorFreer = () -> {};
@@ -74,24 +70,37 @@ public class BFBridge {
     // and compare
     static byte BFTest(IsolateThread t) {
         try {
+            // System.setProperty("java.library.path", "/usr/local/lib/");
+            // System.setProperty("java.library.path", "/bfbridge/");
+
+            System.out.println("java.library.path:");
+            System.out.println(System.getProperty("java.library.path"));
             System.out.println("See if JNI works...");
+            new JPEGTurboServiceImpl();
             new org.libjpegturbo.turbojpeg.TJDecompressor();
             System.out.println("Yes");
         } catch (Exception e) {
             saveError(e.toString());
             return -1;
         }
-        try {
-            System.out.println("See if saving to buffer doesn't require a copy...");
-            // https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/handles/PrimitiveArrayView.java
-            if (new PrimitiveArrayView.createForReading(new byte[10]).isCopy()) {
-                System.out.println("Correct");
-            } else {
-                throw new Exception();
-            }
-        } catch (Exception e) {
-            System.out.println("Expect memory leaks!");
-        }
+
+        // This turned out to be accessible only internally
+        /*
+         * try {
+         * System.out.println("See if saving to buffer doesn't require a copy...");
+         * //
+         * https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.
+         * core/src/com/oracle/svm/core/handles/PrimitiveArrayView.java
+         * if (new PrimitiveArrayView.createForReading(new byte[10]).isCopy()) {
+         * System.out.println("Correct");
+         * } else {
+         * throw new Exception();
+         * }
+         * } catch (Exception e) {
+         * System.out.println("Expect memory leaks!");
+         * }
+         */
+
         System.out.println("See if buffer updates...");
         for (int i = 0; i < 10; i++) {
             communicationBuffer[i] = (byte) i;

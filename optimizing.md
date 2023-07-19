@@ -72,7 +72,12 @@ Updating JDK or updating BioFormats and its libraries might require one or two i
 
 ## JNI problems
 
-You may call a Java function that does "new org.libjpegturbo.turbojpeg.TJDecompressor()" from C to see if JNI works properly (at least for the function org.libjpegturbo.turbojpeg.TJDecompressor.init())
+You may call a Java function that does "new org.libjpegturbo.turbojpeg.TJDecompressor()" from C to see if JNI works properly (at least for the function org.libjpegturbo.turbojpeg.TJDecompressor.init()) after JNI was loaded. Such as:
+
+```
+new loci.formats.services.JPEGTurboServiceImpl();
+new org.libjpegturbo.turbojpeg.TJDecompressor(); // fails if JNI broken
+```
 
 Java has class instance code, which are constructors and methods. There's also a different category: classloader code, which are static variables and static blocks such as in
 
