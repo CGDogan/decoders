@@ -89,7 +89,7 @@ public class BFBridge {
                 throw new Exception();
             }
         } catch (Exception e) {
-            // This is perhaps just a performance problem
+            System.out.println("Expect memory leaks!");
         }
         System.out.println("See if buffer updates...");
         for (int i = 0; i < 10; i++) {
@@ -98,6 +98,7 @@ public class BFBridge {
         // Verify this in C
         // If not, we need to call bf_get_communication_buffer from C
         // whenever we need to access its value
+        // I think this happens iff "Expect memory leaks" is printed above
         return 0;
     }
 
@@ -120,6 +121,26 @@ public class BFBridge {
 
             return toCBoolean(false);
         }
+    }
+
+    @CEntryPoint(name = "bf_reset")
+    // Destroy the library, make it unusable
+    static void BFReset(IsolateThread t) {
+        close();
+
+        try {
+            lastError.close();
+        } catch (Exception e) {
+        }
+
+        lastError = toCBytes(null);
+
+        try {
+            toCBytes(communicationBuffer).close();
+        } catch (Exception e) {
+        }
+
+        communicationBuffer = null;
     }
 
     @CEntryPoint(name = "bf_get_error")
