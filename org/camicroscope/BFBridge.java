@@ -303,6 +303,45 @@ public class BFBridge {
         }
     }
 
+    /*
+     * // These aren't useful because we use setFlattenedResolutions(false)
+     * static byte BFSetCoreIndex(int ) {
+     * // see getSeriesCount. I don't know if this is a useful method?
+     * 
+     * try {
+     * // Precondition: The caller must check that at least 0 and less than
+     * // resolutionCount
+     * reader.setCoreIndex(resIndex);
+     * return toCBoolean(true);
+     * } catch (Exception e) {
+     * saveError(e.toString());
+     * return toCBoolean(false);
+     * }
+     * }
+     * 
+     * static byte BFGetCoreCount() {
+     * }
+     */
+
+    static byte BFSetSeries(int no) {
+        try {
+            reader.setSeries(no);
+            return toCBoolean(true);
+        } catch (Exception e) {
+            saveError(e.toString());
+            return toCBoolean(false);
+        }
+    }
+
+    static int BFGetSeriesCount() {
+        try {
+            return reader.getSeriesCount();
+        } catch (Exception e) {
+            saveError(e.toString());
+            return -1;
+        }
+    }
+
     @CEntryPoint(name = "bf_get_size_x")
     static int BFGetSizeX(IsolateThread t) {
         try {
@@ -431,6 +470,7 @@ public class BFBridge {
     }
 
     @CEntryPoint(name = "bf_get_rgb_channel_count")
+    // (Almost?) always equal to sizeC. Can be 3, can be 4.
     static int BFGetRGBChannelCount(IsolateThread t) {
         try {
             return reader.getRGBChannelCount();
@@ -440,8 +480,24 @@ public class BFBridge {
         }
     }
 
+    @CEntryPoint(name = "bf_get_image_count")
+    // number of planes in current series.
+    static int BFGetImageCount(IsolateThread t) {
+        /*
+         * getEffectiveSizeC() * getSizeZ() * getSizeT() == getImageCount() regardless
+         * of the result of isRGB().
+         */
+        try {
+            return reader.getImageCount();
+        } catch (Exception e) {
+            saveError(e.toString());
+            return -1;
+        }
+    }
+
     @CEntryPoint(name = "bf_is_rgb")
     // if one openbytes call gives multiple colors
+    // ie, if BFGetImageCount many calls are needed to openbytes
     static byte BFIsRGB(IsolateThread t) {
         try {
             return toCBoolean(reader.isRGB());
