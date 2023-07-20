@@ -54,6 +54,9 @@ public class BFBridge {
      * }
      */
 
+    // A more efficient way to receive strings from C exists:
+    // https://github.com/kirillp/graalSamples/tree/master/simpleApp
+    // Pass the allocator to java
     private static CCharPointerHolder lastError = toCBytes(null);
     // private static Runnable lastErrorFreer = () -> {};
 
