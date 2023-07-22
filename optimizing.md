@@ -70,6 +70,10 @@ The last lines are important: `java.awt.event.MouseEvent`, `javax.imageio.ImageI
 
 Updating JDK or updating BioFormats and its libraries might require one or two iterations more
 
+You may also be required `--trace-object-instantiation=java.lang.Thread` etc to find some more culprits, error output is usually useful.
+
+EDIT: But please note that the shortcut I mentioned, such as instead of listing sun.awt.x, sun.awt.y, taking the parent "sun.awt" directly, misses some classes available for optimization. Hence I provide "initialize-exceptions" which was done with this shortcut and "initialize-exceptions-strict" which was done without this shortcut. Without this shortcut, it (may) take more iterations (but I observed: it didn't), but this might need to be repeated with every JDK update.
+
 ## JNI problems
 
 You may call a Java function that does "new org.libjpegturbo.turbojpeg.TJDecompressor()" from C to see if JNI works properly (at least for the function org.libjpegturbo.turbojpeg.TJDecompressor.init()) after JNI was loaded. Such as:
@@ -142,3 +146,5 @@ in which case add to build flags: `--initialize-at-run-time=org.bioformats.XXX.W
 But do not build in production with `--initialize-at-run-time=org.scijava.nativelib.NativeLibraryUtil`, as we would like to run as much static code as feasible at build time and this library doesn't call System.load() in any static blocks.
 
 Small note: We can do --initialize-at-run-time=org.scijava.nativelib.NativeLibraryUtil for one development build and see what exactly requires System.load at compile time because NativeLibraryUtil has all members static so it cannot be instantiated so if it runs at compile time, it's because some code wanted to load a library (and not instantiate this class, which would be nonbreaking)
+
+Don't forget to add `-Ob` for all development builds, to optimize for build time
