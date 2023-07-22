@@ -16,6 +16,7 @@ import static org.graalvm.nativeimage.c.type.CTypeConversion.toJavaString;
 import loci.formats.tools.ImageConverter;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Files;
@@ -78,10 +79,31 @@ public class BFBridge {
 
             System.out.println("java.library.path:");
             System.out.println(System.getProperty("java.library.path"));
+            // JNI might not work if the System.loadLibrary is called
+            // in a static block and we don't skip it in initialze-at-runtime=
             System.out.println("See if JNI works...");
+            System.out.println("Checking TurboJPEG");
             new JPEGTurboServiceImpl();
-            new org.libjpegturbo.turbojpeg.TJDecompressor();
-            System.out.println("Yes");
+            System.out.println(new org.libjpegturbo.turbojpeg.TJDecompressor());
+            System.out.println("TurboJPEG seems to work");
+            System.out.println(
+                    "Checking javax.imageio.ImageIO.read/com.sun.imageio.plugins.jpeg.JPEGImageReader.initJPEGImageReader");
+                                // Error can be hidden with with --initialize-at-run-time=javax.imageio.ImageIO,java.awt,com.sun.imageio I think and maybe more
+            try {
+            ImageInputStream stream = new MemoryCacheImageInputStream(new BufferedInputStream(new ByteArrayInputStream(
+                    new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, (byte) 0x00, (byte) 0x10,
+                            (byte) 0x4A, (byte) 0x46 }),
+                    81920));
+            var b = ImageIO.read(stream);
+            } catch(Exception e) {
+                // JPEG headers, so jpeg reader tried, but invalid data
+            System.out.println("Seems to work");
+
+            } catch (Error e) {
+                            System.out.println("Broken. " + e.toString());
+                            return -1;
+
+            }
         } catch (Exception e) {
             saveError(e.toString());
             return -1;
@@ -738,9 +760,14 @@ public class BFBridge {
     @CEntryPoint(name = "bfinternal_deleteme")
     static byte BFInternalDeleteme(IsolateThread t, CCharPointer file) {
         try {
-            System.out.println("Making class");
+            System.out.println("Checking TurboJPEG");
+            new JPEGTurboServiceImpl();
             System.out.println(new org.libjpegturbo.turbojpeg.TJDecompressor());
-            System.out.println("Made class");
+            System.out.println("TurboJPEG seems to work");
+            System.out.println(
+                    "Checking javax.imageio.ImageIO.read/com.sun.imageio.plugins.jpeg.JPEGImageReader.initJPEGImageReader");
+            // System.out.println(new com.sun.imageio.plugins.jpeg.JPEGImageReader());
+            System.out.println("Seems to work");
 
             var s = toJavaString(file);
 
@@ -786,6 +813,8 @@ public class BFBridge {
              * reader.openBytes(0, bytes, 51200, 30720, 1024, 1024);
              */
             System.out.println("Making class");
+            reader = new ImageReader();
+            new JPEGTurboServiceImpl();
             System.out.println(new org.libjpegturbo.turbojpeg.TJDecompressor());
             System.out.println("Made class");
 
@@ -802,10 +831,12 @@ public class BFBridge {
             System.out.println("Dirlist: " + Arrays.toString(files1));
 
             // http://127.0.0.1:4010/img/IIP/raw/?DeepZoom=/images/OS-1.ndpi.tiff_files/17/76_16.jpg
-            reader.setId("/images/OS-1.ndpi.tiff");
-            reader.setResolution(0);
-            byte[] bytes = new byte[3145728];
-            reader.openBytes(0, bytes, 77824, 16384, 1024, 1024);
+            /*
+             * reader.setId("/images/OS-1.ndpi.tiff");
+             * reader.setResolution(0);
+             * byte[] bytes = new byte[3145728];
+             * reader.openBytes(0, bytes, 77824, 16384, 1024, 1024);
+             */
             // TJUnitTest.main(new String[0]);
 
             System.out.println("Step 1");
@@ -834,9 +865,12 @@ public class BFBridge {
             // reader.getReader("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/out2ewfrerwf_tiff_conv.tif");
             System.out.println("Step 1.2");
 
-            ImageInputStream stream = new MemoryCacheImageInputStream(new BufferedInputStream(new FileInputStream(
-                    "/Users/zerf/Desktop/Screenshot 2023-06-30 at 15.31.08.png"), 81920));
+            ImageInputStream stream = new MemoryCacheImageInputStream(new BufferedInputStream(new ByteArrayInputStream(
+                    new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, (byte) 0x00, (byte) 0x10,
+                            (byte) 0x4A, (byte) 0x46 }),
+                    81920));
             var b = ImageIO.read(stream);
+            System.out.println("read from stream!");
 
             System.out.println("start 1");
             reader.close(true);

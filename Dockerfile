@@ -28,7 +28,7 @@ WORKDIR bfbridge
 RUN ls /graalvm-community-openjdk-20.0.1+9.1
 
 RUN javac -cp ".:jar_files/*" org/camicroscope/BFBridge.java
-RUN native-image -cp ".:jar_files/*" --shared -H:Name=libbfbridge  --initialize-at-run-time=$(cat initialize-exceptions-strict) --initialize-at-build-time org.camicroscope.BFBridge
+RUN native-image -cp ".:jar_files/*" --shared -H:Name=libbfbridge  --initialize-at-run-time=$(cat initialize-exceptions-strict),$(cat githuboracleslashgraalissue7047) --initialize-at-build-time org.camicroscope.BFBridge
 RUN ls
 RUN cp -t /usr/local/lib *.so
 RUN cp -t /usr/local/include *.h
