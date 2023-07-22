@@ -323,8 +323,6 @@ public class BFBridge {
      * }
      */
 
-    // with the easy viewing api we use, a series is an independent one.
-    // A single image or a multilayer pyramid.
     static byte BFSetSeries(int no) {
         try {
             reader.setSeries(no);
