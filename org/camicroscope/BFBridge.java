@@ -67,7 +67,7 @@ public class BFBridge {
     // currently uses createForReading and hence unsuitable for communication
     // from C
     // currently this is chosen to allow 2048*2048 four channels of 16 bits
-    private static byte[] communicationBuffer = new byte[34000000/*500000000*/];
+    private static byte[] communicationBuffer = new byte[34000000/* 500000000 */];
 
     @CEntryPoint(name = "bf_test")
     // see if this library works. Run this after BFClearCommunicationBuffer if not
@@ -588,8 +588,15 @@ public class BFBridge {
             // To implement that one would need to read the description of
             // https://downloads.openmicroscopy.org/bio-formats/5.4.1/api/loci/formats/IFormatReader.html#getEffectiveSizeC--
             // and understand the difference between getimagecount and getseriescount
-            reader.openBytes(0, communicationBuffer, x, y, w, h);
-            return size;
+
+            byte[] buff = reader.openBytes(0, x, y, w, h);
+            for (int i = 0; i < buff.length; i++) {
+                communicationBuffer[i] = buff[i];
+            }
+            return buff.length;
+
+            /*reader.openBytes(0, communicationBuffer, x, y, w, h);
+            return size;*/
         } catch (Exception e) {
             saveError(getStackTrace(e));
             // This is permitted:
