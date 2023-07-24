@@ -67,7 +67,7 @@ public class BFBridge {
     // currently uses createForReading and hence unsuitable for communication
     // from C
     // currently this is chosen to allow 2048*2048 four channels of 16 bits
-    private static byte[] communicationBuffer = new byte[34000000/* 500000000 */];
+    private static byte[] communicationBuffer = new byte[25165824/*34000000*//* 500000000 */];
 
     @CEntryPoint(name = "bf_test")
     // see if this library works. Run this after BFClearCommunicationBuffer if not
