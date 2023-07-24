@@ -589,14 +589,14 @@ public class BFBridge {
             // https://downloads.openmicroscopy.org/bio-formats/5.4.1/api/loci/formats/IFormatReader.html#getEffectiveSizeC--
             // and understand the difference between getimagecount and getseriescount
 
-            byte[] buff = reader.openBytes(0, x, y, w, h);
+            /*byte[] buff = reader.openBytes(0, x, y, w, h);
             for (int i = 0; i < buff.length; i++) {
                 communicationBuffer[i] = buff[i];
             }
-            return buff.length;
+            return buff.length;*/
 
-            /*reader.openBytes(0, communicationBuffer, x, y, w, h);
-            return size;*/
+            reader.openBytes(0, communicationBuffer, x, y, w, h);
+            return size;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             // This is permitted:
