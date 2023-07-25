@@ -67,7 +67,7 @@ public class BFBridge {
     // currently uses createForReading and hence unsuitable for communication
     // from C
     // currently this is chosen to allow 2048*2048 four channels of 16 bits
-    private static byte[] communicationBuffer = new byte[25165824/*34000000*//* 500000000 */];
+    private static byte[] communicationBuffer = new byte[33554432];
 
     @CEntryPoint(name = "bf_test")
     // see if this library works. Run this after BFClearCommunicationBuffer if not
@@ -542,17 +542,6 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_floating_point_is_normalized")
-    static byte BFIsNormalized(IsolateThread t) {
-        // tells whether to normalize floating point data
-        try {
-            return toCBoolean(reader.isNormalized());
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
-        }
-    }
-
     @CEntryPoint(name = "bf_get_dimension_order")
     static CCharPointer BFGetDimensionOrder(IsolateThread t) {
         try {
@@ -589,14 +578,18 @@ public class BFBridge {
             // https://downloads.openmicroscopy.org/bio-formats/5.4.1/api/loci/formats/IFormatReader.html#getEffectiveSizeC--
             // and understand the difference between getimagecount and getseriescount
 
-            /*byte[] buff = reader.openBytes(0, x, y, w, h);
+            byte[] buff = reader.openBytes(0, x, y, w, h);
             for (int i = 0; i < buff.length; i++) {
                 communicationBuffer[i] = buff[i];
             }
-            return buff.length;*/
+            return buff.length;
 
+            /*
+            Uncomment me when https://github.com/ome/bioformats/issues/4058
+            is fixed and bioformats updated. This saves us from redundant copying.
+            
             reader.openBytes(0, communicationBuffer, x, y, w, h);
-            return size;
+            return size;*/
         } catch (Exception e) {
             saveError(getStackTrace(e));
             // This is permitted:
