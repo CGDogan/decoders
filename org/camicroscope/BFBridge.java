@@ -441,6 +441,9 @@ public class BFBridge {
     @CEntryPoint(name = "bf_get_pixel_type")
     static int BFGetPixelType(IsolateThread t) {
         try {
+            // https://github.com/ome/bioformats/blob/4a08bfd5334323e99ad57de00e41cd15706164eb/components/formats-api/src/loci/formats/FormatReader.java#L735
+            // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L835
+            // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L1507
             return reader.getPixelType();
         } catch (Exception e) {
             saveError(getStackTrace(e));
@@ -465,8 +468,10 @@ public class BFBridge {
     }
 
     @CEntryPoint(name = "bf_get_bytes_per_pixel")
+    // gives bytes per pixel in a channel
     static int BFGetBytesPerPixel(IsolateThread t) {
         try {
+                                    System.out.println("Type: " + reader.getPixelType());
             return FormatTools.getBytesPerPixel(reader.getPixelType());
         } catch (Exception e) {
             saveError(getStackTrace(e));
@@ -532,10 +537,43 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_is_floating_point")
+/*     @CEntryPoint(name = "bf_is_floating_point")
+    // Warning: this check is that image contains at least one floating point subimage
+    // not of the current resolution/series
+    // so I'm disabling this
     static byte BFIsFloatingPoint(IsolateThread t) {
         try {
             return toCBoolean(FormatTools.isFloatingPoint(reader));
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }*/
+
+    @CEntryPoint(name = "bf_is_false_color")
+    // https://downloads.openmicroscopy.org/bio-formats/6.14.0/api/loci/formats/IFormatReader.html#isFalseColor--
+    // when we have 8 or 16 bits per channel, these might be signifying
+    // indices in color profile.
+    // isindexed false, isfalsecolor false -> no table
+    // isindexed true, isfalsecolor false-> table must be read
+    // isindexed true, isfalsecolor true-> table can be read for precision, not obligatorily
+    static byte BFIsFalseColor(IsolateThread t) {
+        // note: lookup tables need to be cached by us
+        // as some readers such as
+        // https://github.com/ome/bioformats/blob/65db5eb2bb866ebde42c8d6e2611818612432828/components/formats-bsd/src/loci/formats/in/OMETiffReader.java#L310
+        // do not serve from cache
+        try {
+            return toCBoolean(reader.isFalseColor());
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
+    @CEntryPoint(name = "bf_is_indexed_color")
+    static byte BFIsIndexedColor(IsolateThread t) {
+        try {
+            return toCBoolean(reader.isIndexed());
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
@@ -685,6 +723,8 @@ public class BFBridge {
     @CEntryPoint(name = "bftools_should_generate")
     // Once a file is successfully opened, call this to see if we need to
     // regenerate the pyramid
+    // The result should be read with bioformats not openslide:
+    // https://forum.image.sc/t/bfconvert-breaks-images-with-alpha-layer-wrong-interleave/83482
     static byte BFToolsShouldGenerate(IsolateThread t) {
         try {
             int levels = reader.getResolutionCount();
