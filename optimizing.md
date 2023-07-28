@@ -142,3 +142,7 @@ in which case add to build flags: `--initialize-at-run-time=org.bioformats.XXX.W
 But do not build in production with `--initialize-at-run-time=org.scijava.nativelib.NativeLibraryUtil`, as we would like to run as much static code as feasible at build time and this library doesn't call System.load() in any static blocks.
 
 Small note: We can do --initialize-at-run-time=org.scijava.nativelib.NativeLibraryUtil for one development build and see what exactly requires System.load at compile time because NativeLibraryUtil has all members static so it cannot be instantiated so if it runs at compile time, it's because some code wanted to load a library (and not instantiate this class, which would be nonbreaking)
+
+Also remember:
+
+`  -H:+PrintClassInitialization                 Prints class initialization info for all classes detected by analysis. Default: - (disabled).`
