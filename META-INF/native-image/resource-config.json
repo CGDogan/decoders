@@ -87,8 +87,11 @@
     "name":"com.sun.tools.javac.resources.launcher",
     "classNames":["com.sun.tools.javac.resources.launcher"]
   }, {
+    "name":"org.apache.xerces.impl.msg.SAXMessages",
+    "locales":["", "en"]
+  }, {
     "name":"org.apache.xerces.impl.msg.XMLMessages",
-    "locales":["en", "und"]
+    "locales":["", "en", "und"]
   }, {
     "name":"org.apache.xml.serializer.XMLEntities",
     "locales":["und"]

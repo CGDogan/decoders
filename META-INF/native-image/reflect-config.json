@@ -21,6 +21,14 @@
   "name":"ch.epfl.biop.formats.in.ZeissQuickStartCZIReader"
 },
 {
+  "name":"com.drew.metadata.exif.ExifIFD0Directory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.drew.metadata.exif.ExifSubIFDDirectory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"java.io.FilePermission"
 },
 {

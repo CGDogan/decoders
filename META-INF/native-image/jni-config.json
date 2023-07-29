@@ -78,6 +78,10 @@
   "fields":[{"name":"data"}, {"name":"dataOffsets"}, {"name":"pixelStride"}, {"name":"scanlineStride"}, {"name":"type"}]
 },
 {
+  "name":"sun.awt.image.IntegerComponentRaster",
+  "fields":[{"name":"data"}, {"name":"dataOffsets"}, {"name":"pixelStride"}, {"name":"scanlineStride"}, {"name":"type"}]
+},
+{
   "name":"sun.java2d.Disposer",
   "methods":[{"name":"addRecord","parameterTypes":["java.lang.Object","long","long"] }]
 }
