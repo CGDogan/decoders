@@ -70,7 +70,7 @@ public class BFBridge {
     // communicationBuffer.rewind() before reading/writing
     private static int lastErrorBytes = 0;
 
-    static int BFSetCommunicationBuffer(ByteBuffer b) {
+    static void BFSetCommunicationBuffer(ByteBuffer b) {
         communicationBuffer = b;
     }
 
@@ -93,7 +93,7 @@ public class BFBridge {
             // If we didn't have this line, I would change
             // "private static ImageReader reader" to
             // "private static IFormatReader reader"
-            return reader.getReader(filename) != null ? 1 : 0;
+            return reader.getReader(new String(filename)) != null ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
@@ -124,7 +124,7 @@ public class BFBridge {
         try {
             byte[] filename = new byte[filenameLength];
             communicationBuffer.rewind().get(filename);
-            reader.setId(filename);
+            reader.setId(new String(filename));
             return 1;
         } catch (Exception e) {
             saveError(getStackTrace(e));
@@ -141,7 +141,7 @@ public class BFBridge {
             communicationBuffer.rewind().get(filename);
 
             close();
-            return reader.isSingleFile(filename) ? 1 : 0;
+            return reader.isSingleFile(new String(filename)) ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
@@ -341,7 +341,7 @@ public class BFBridge {
     }
 
     // writes to communicationBuffer and returns the number of bytes written
-    static CCharPointer BFGetFormat() {
+    static int BFGetFormat() {
         try {
             byte[] formatBytes = reader.getFormat().getBytes();
             communicationBuffer.rewind().put(formatBytes);
@@ -355,7 +355,6 @@ public class BFBridge {
     // Internal BioFormats pixel type
     static int BFGetPixelType() {
         try {
-            continuefromhere
             // https://github.com/ome/bioformats/blob/4a08bfd5334323e99ad57de00e41cd15706164eb/components/formats-api/src/loci/formats/FormatReader.java#L735
             // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L835
             // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L1507
