@@ -7,11 +7,6 @@ import loci.formats.MetadataTools;
 import loci.formats.meta.IMetadata;
 import loci.formats.services.JPEGTurboServiceImpl;
 import ome.units.UNITS;
-import org.graalvm.nativeimage.c.type.CTypeConversion.CCharPointerHolder;
-import static org.graalvm.nativeimage.c.type.CTypeConversion.toCString; // Watch out for memory leaks
-import static org.graalvm.nativeimage.c.type.CTypeConversion.toCBytes; // Likewise
-import static org.graalvm.nativeimage.c.type.CTypeConversion.toCBoolean;
-import static org.graalvm.nativeimage.c.type.CTypeConversion.toJavaString;
 
 import loci.formats.tools.ImageConverter;
 
@@ -20,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.function.Function;
@@ -28,170 +24,76 @@ import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
 
-import org.graalvm.nativeimage.c.type.CCharPointer;
-import org.graalvm.nativeimage.c.function.CEntryPoint;
-import org.graalvm.nativeimage.IsolateThread;
-import org.graalvm.word.WordFactory;
-
-//import org.camicroscope.TJUnitTest;
-
 // https://bio-formats.readthedocs.io/en/v6.14.0/developers/file-reader.html#reading-files
 // There are other utilities as well
-
-// How does GraalVM isolates and threads work?
-// https://medium.com/graalvm/isolates-and-compressed-references-more-flexible-and-efficient-memory-management-for-graalvm-a044cc50b67e
 
 import loci.common.RandomAccessInputStream;
 
 public class BFBridge {
-    private static ImageReader reader = null; // see optimizing.md
+    private static ImageReader reader = new ImageReader();
     private static IMetadata metadata = MetadataTools.createOMEXMLMetadata();
-    /*
-     * static {
-     * load .so files compiled along
-     * alternatively, for our Docker:
-     * System.setProperty("java.library.path", "/bfbridge/");
-     * System.setProperty("java.library.path", "/usr/local/lib/");
-     * This can be (should be? for graal) moved out of a static block
-     * }
-     */
-
-    // A more efficient way to receive strings from C exists:
-    // https://github.com/kirillp/graalSamples/tree/master/simpleApp
-    // Pass the allocator to java
-    private static CCharPointerHolder lastError = toCBytes(null);
-    // private static Runnable lastErrorFreer = () -> {};
-
-    // See the file
-    // https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/handles/PrimitiveArrayView.java
-    // currently uses createForReading and hence unsuitable for communication
-    // from C
-    // currently this is chosen to allow 2048*2048 four channels of 16 bits
-    private static byte[] communicationBuffer = new byte[33554432];
-
-    @CEntryPoint(name = "bf_test")
-    // see if this library works. Run this after BFClearCommunicationBuffer if not
-    // fresh. The last check should be done at C side:
-    // call bf_get_communication_buffer before and after this method
-    // and compare
-    static byte BFTest(IsolateThread t) {
-        try {
-            // System.setProperty("java.library.path", "/usr/local/lib/");
-            // System.setProperty("java.library.path", "/bfbridge/");
-
-            System.out.println("java.library.path:");
-            System.out.println(System.getProperty("java.library.path"));
-            System.out.println("See if JNI works...");
-            new JPEGTurboServiceImpl();
-            new org.libjpegturbo.turbojpeg.TJDecompressor();
-            System.out.println("Yes");
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
-        }
-
-        // This turned out to be accessible only internally
-        /*
-         * try {
-         * System.out.println("See if saving to buffer doesn't require a copy...");
-         * //
-         * https://github.com/oracle/graal/blob/master/substratevm/src/com.oracle.svm.
-         * core/src/com/oracle/svm/core/handles/PrimitiveArrayView.java
-         * if (new PrimitiveArrayView.createForReading(new byte[10]).isCopy()) {
-         * System.out.println("Correct");
-         * } else {
-         * throw new Exception();
-         * }
-         * } catch (Exception e) {
-         * System.out.println("Expect memory leaks!");
-         * }
-         */
-
-        System.out.println("See if buffer updates...");
-        for (int i = 0; i < 10; i++) {
-            communicationBuffer[i] = (byte) i;
-        }
-        // Verify this in C
-        // If not, we need to call bf_get_communication_buffer from C
-        // whenever we need to access its value
-        // I think this happens iff "Expect memory leaks" is printed above
-        return 0;
+    static {
+        // Use the easier resolution API
+        reader.setFlattenedResolutions(false);
+        reader.setMetadataStore(metadata);
+        // Save file-specific metadata as well?
+        // metadata.setOriginalMetadataPopulated(true);
     }
 
-    @CEntryPoint(name = "bf_initialize")
-    // Does nothing if not initialized
-    // Won't reset, use BFClearCommunicationBuffer and BFClose for that
-    static byte BFInitialize(IsolateThread t) {
-        try {
-            if (reader == null) {
-                reader = new ImageReader();
-                // Use the easier resolution API
-                reader.setFlattenedResolutions(false);
-                reader.setMetadataStore(metadata);
-            }
-            // Save file-specific metadata as well?
-            // metadata.setOriginalMetadataPopulated(true);
-            return toCBoolean(true);
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
+    // currently this may be chosen to allow 2048*2048 four channels of 16 bits
+    // 33554432
 
-            return toCBoolean(false);
-        }
+    // If we need to encode special characters please see
+    // https://stackoverflow.com/a/17737968
+    private static ByteBuffer communicationBuffer = null;
+    // Design decisions of this library:
+    // There are two ways to communicate:
+    // 1) https://stackoverflow.com/a/26605880 allocate byte[] from C
+    // also see https://stackoverflow.com/a/4083678
+    // or GetPrimitiveArrayCritical for fast access
+    // these likely won't copy
+    // but I chose the second one
+    // 2) NewDirectByteBuffer: set ByteBuffer to native memory from C
+    // I think the difference between them is just the API
+
+    // How we use the communicationBuffer:
+    // 1) read region, etc. write to it from the beginning and return bytes written
+    // 2) read region negative, so write an error.
+    // to classify the error, see what code branch returns it
+    // to display a message, "lastErrorBytes" many bytes were written as error to
+    // communicationBuffer so display its that many bytes.
+    // communicationBuffer does not usually null terminate.
+    // remember to: (std::string s).assign(ptr, size) or ptr[size] = 0;
+
+    // Remember:
+    // functions that use communicationBuffer should call
+    // communicationBuffer.rewind() before reading/writing
+    private static int lastErrorBytes = 0;
+
+    static int BFSetCommunicationBuffer(ByteBuffer b) {
+        communicationBuffer = b;
     }
 
-    @CEntryPoint(name = "bf_reset")
-    // Destroy the library, make it unusable
-    static void BFReset(IsolateThread t) {
+    // the user should clear communicationBuffer
+    static void BFReset() {
         close();
-
-        try {
-            lastError.close();
-        } catch (Exception e) {
-        }
-
-        lastError = toCBytes(null);
-
-        try {
-            toCBytes(communicationBuffer).close();
-        } catch (Exception e) {
-        }
-
         communicationBuffer = null;
     }
 
-    @CEntryPoint(name = "bf_get_error")
-    static CCharPointer BFGetError(IsolateThread t) {
-        return lastError.get();
+    static int BFGetErrorLength() {
+        return lastErrorBytes;
     }
 
-    @CEntryPoint(name = "bf_get_communication_buffer")
-    // Memory for data written by Java
-    // Used by BFOpenBytes and BFGetUsedFiles
-    static CCharPointer BFGetCommunicationBuffer(IsolateThread t) {
-        // This does not copy
-        // https://github.com/oracle/graal/blob/492c6016c5d9233be5de2dd9502cc81f746fc8e7/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/c/CTypeConversionSupportImpl.java#L206
-        return toCBytes(communicationBuffer).get();
-    }
-
-    @CEntryPoint(name = "bf_clear_communication_buffer")
-    // If a JVM on this library was to be shared between executables
-    // They would need to clear the buffer before leaving if data can be sensitive
-    // Our iipsrv manages access to the buffer on its own without sharing
-    // and already has access to files so this is not really useful.
-    static void BFClearCommunicationBuffer(IsolateThread t) {
-        for (int i = 0; i < communicationBuffer.length; i++) {
-            communicationBuffer[i] = 0;
-        }
-    }
-
-    @CEntryPoint(name = "bf_is_compatible")
     // Please note: this closes the previous file
-    static byte BFIsCompatible(IsolateThread t, final CCharPointer filePath) {
+    // Input Parameter: first filenameLength bytes of communicationBuffer.
+    static int BFIsCompatible(int filenameLength) {
         try {
+            byte[] filename = new byte[filenameLength];
+            communicationBuffer.rewind().get(filename);
             // If we didn't have this line, I would change
             // "private static ImageReader reader" to
             // "private static IFormatReader reader"
-            return toCBoolean(reader.getReader(toJavaString(filePath)) != null);
+            return reader.getReader(filename) != null ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
@@ -216,27 +118,30 @@ public class BFBridge {
      * return readers;
      */
 
-    @CEntryPoint(name = "bf_open")
     // Do not open another file without closing current
-    static byte BFOpen(IsolateThread t, final CCharPointer filePath) {
+    // Input Parameter: first filenameLength bytes of communicationBuffer
+    static int BFOpen(int filenameLength) {
         try {
-            // TODO DEBUG line
-            System.out.println("Opening file: " + toJavaString(filePath));
-            reader.setId(toJavaString(filePath));
-            // reader.setMetadataStore(metadata);
-            return toCBoolean(true);
+            byte[] filename = new byte[filenameLength];
+            communicationBuffer.rewind().get(filename);
+            reader.setId(filename);
+            return 1;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             close();
-            return toCBoolean(false);
+            return -1;
         }
     }
 
     // If expected to be the single file, or always true for single-file formats
-    @CEntryPoint(name = "bf_is_single_file")
-    static byte BFIsSingleFile(IsolateThread t, CCharPointer filePath) {
+    // Input Parameter: first filenameLength bytes of communicationBuffer.
+    static int BFIsSingleFile(int filenameLength) {
         try {
-            return toCBoolean(reader.isSingleFile(toJavaString(filePath)));
+            byte[] filename = new byte[filenameLength];
+            communicationBuffer.rewind().get(filename);
+
+            close();
+            return reader.isSingleFile(filename) ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
@@ -245,22 +150,21 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_used_files")
     // Lists null-separated filenames. Returns bytes written including the last null
-    static int BFGetUsedFiles(IsolateThread t) {
+    static int BFGetUsedFiles() {
         try {
+            communicationBuffer.rewind();
             String[] files = reader.getUsedFiles();
             int charI = 0;
             for (String file : files) {
                 byte[] characters = file.getBytes();
-                if (characters.length + 2 > communicationBuffer.length) {
+                if (characters.length + 2 > communicationBuffer.capacity()) {
                     saveError("Too long");
                     return -2;
                 }
-                for (int i = 0; i < characters.length; i++) {
-                    communicationBuffer[charI++] = characters[i];
-                }
-                communicationBuffer[charI++] = 0;
+                communicationBuffer.put(characters);
+                communicationBuffer.put((byte) 0);
+                charI += characters.length + 1;
             }
             return charI;
         } catch (Exception e) {
@@ -269,19 +173,36 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_close")
-    static byte BFClose(IsolateThread t, int fileOnly) {
+    // writes to communicationBuffer and returns the number of bytes written
+    // 0 if no file was opened
+    // remember that this function likely returns a full path
+    static int BFGetCurrentFile() {
         try {
-            reader.close(fileOnly != 0);
-            return toCBoolean(true);
+            String file = reader.getCurrentFile();
+            if (file == null) {
+                return 0;
+            } else {
+                byte[] characters = file.getBytes();
+                communicationBuffer.rewind().put(characters);
+                return characters.length;
+            }
         } catch (Exception e) {
             saveError(getStackTrace(e));
-            return toCBoolean(false);
+            return -1;
         }
     }
 
-    @CEntryPoint(name = "bf_get_resolution_count")
-    static int BFGetResolutionCount(IsolateThread t) {
+    static int BFClose() {
+        try {
+            reader.close();
+            return 1;
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
+    static int BFGetResolutionCount() {
         try {
             // In resolution mode, each of series has a number of resolutions
             // WSI pyramids have multiple and others have one
@@ -293,48 +214,47 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_set_current_resolution")
-    static byte BFSetCurrentResolution(IsolateThread t, int resIndex) {
+    static int BFSetCurrentResolution(int resIndex) {
         try {
             // Precondition: The caller must check that at least 0 and less than
             // resolutionCount
             reader.setResolution(resIndex);
-            return toCBoolean(true);
+            return 1;
         } catch (Exception e) {
             saveError(getStackTrace(e));
-            return toCBoolean(false);
+            return -1;
         }
     }
 
     /*
      * // These aren't useful because we use setFlattenedResolutions(false)
-     * static byte BFSetCoreIndex(int ) {
+     * static int BFSetCoreIndex(int ) {
      * // see getSeriesCount. I don't know if this is a useful method?
      * 
      * try {
      * // Precondition: The caller must check that at least 0 and less than
      * // resolutionCount
      * reader.setCoreIndex(resIndex);
-     * return toCBoolean(true);
+     * return 1;
      * } catch (Exception e) {
      * saveError(getStackTrace(e));
-     * return toCBoolean(false);
+     * return -1;
      * }
      * }
      * 
-     * static byte BFGetCoreCount() {
+     * static int BFGetCoreCount() {
      * }
      */
 
     // with the easy viewing api we use, a series is an independent one.
     // A single image or a multilayer pyramid.
-    static byte BFSetSeries(int no) {
+    static int BFSetSeries(int no) {
         try {
             reader.setSeries(no);
-            return toCBoolean(true);
+            return 1;
         } catch (Exception e) {
             saveError(getStackTrace(e));
-            return toCBoolean(false);
+            return -1;
         }
     }
 
@@ -347,8 +267,7 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_size_x")
-    static int BFGetSizeX(IsolateThread t) {
+    static int BFGetSizeX() {
         try {
             // For current resolution
             return reader.getSizeX();
@@ -358,8 +277,7 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_size_y")
-    static int BFGetSizeY(IsolateThread t) {
+    static int BFGetSizeY() {
         try {
             return reader.getSizeY();
         } catch (Exception e) {
@@ -368,8 +286,7 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_size_z")
-    static int BFGetSizeZ(IsolateThread t) {
+    static int BFGetSizeZ() {
         try {
             return reader.getSizeZ();
         } catch (Exception e) {
@@ -378,8 +295,7 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_size_t")
-    static int BFGetSizeT(IsolateThread t) {
+    static int BFGetSizeT() {
         try {
             return reader.getSizeT();
         } catch (Exception e) {
@@ -388,8 +304,7 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_size_c")
-    static int BFGetSizeC(IsolateThread t) {
+    static int BFGetSizeC() {
         try {
             return reader.getSizeC();
         } catch (Exception e) {
@@ -398,8 +313,7 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_effective_size_c")
-    static int BFGetEffectiveSizeC(IsolateThread t) {
+    static int BFGetEffectiveSizeC() {
         try {
             return reader.getEffectiveSizeC();
         } catch (Exception e) {
@@ -408,8 +322,7 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_optimal_tile_width")
-    static int BFGetOptimalTileWidth(IsolateThread t) {
+    static int BFGetOptimalTileWidth() {
         try {
             return reader.getOptimalTileWidth();
         } catch (Exception e) {
@@ -418,8 +331,7 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_optimal_tile_height")
-    static int BFGetOptimalTİleHeight(IsolateThread t) {
+    static int BFGetOptimalTİleHeight() {
         try {
             return reader.getOptimalTileHeight();
         } catch (Exception e) {
@@ -428,19 +340,22 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_format")
-    static CCharPointer BFGetFormat(IsolateThread t) {
+    // writes to communicationBuffer and returns the number of bytes written
+    static CCharPointer BFGetFormat() {
         try {
-            return toCString(reader.getFormat()).get();
+            byte[] formatBytes = reader.getFormat().getBytes();
+            communicationBuffer.rewind().put(formatBytes);
+            return formatBytes.length;
         } catch (Exception e) {
             saveError(getStackTrace(e));
-            return WordFactory.nullPointer();
+            return -1;
         }
     }
 
-    @CEntryPoint(name = "bf_get_pixel_type")
-    static int BFGetPixelType(IsolateThread t) {
+    // Internal BioFormats pixel type
+    static int BFGetPixelType() {
         try {
+            continuefromhere
             // https://github.com/ome/bioformats/blob/4a08bfd5334323e99ad57de00e41cd15706164eb/components/formats-api/src/loci/formats/FormatReader.java#L735
             // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L835
             // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L1507
@@ -451,12 +366,11 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_bits_per_pixel")
     // The name is misleading
     // Actually this gives bits per pixel per channel!
     // openBytes documentation makes this clear
     // https://downloads.openmicroscopy.org/bio-formats/latest/api/loci/formats/ImageReader.html#openBytes-int-byte:A-
-    static int BFGetBitsPerPixel(IsolateThread t) {
+    static int BFGetBitsPerPixel() {
         // https://downloads.openmicroscopy.org/bio-formats/latest/api/loci/formats/IFormatReader.html#getPixelType--
         // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L96
         try {
@@ -467,11 +381,9 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_bytes_per_pixel")
     // gives bytes per pixel in a channel
-    static int BFGetBytesPerPixel(IsolateThread t) {
+    static int BFGetBytesPerPixel() {
         try {
-                                    System.out.println("Type: " + reader.getPixelType());
             return FormatTools.getBytesPerPixel(reader.getPixelType());
         } catch (Exception e) {
             saveError(getStackTrace(e));
@@ -479,9 +391,8 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_rgb_channel_count")
     // (Almost?) always equal to sizeC. Can be 3, can be 4.
-    static int BFGetRGBChannelCount(IsolateThread t) {
+    static int BFGetRGBChannelCount() {
         try {
             return reader.getRGBChannelCount();
         } catch (Exception e) {
@@ -490,10 +401,10 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_image_count")
     // number of planes in current series.
-    static int BFGetImageCount(IsolateThread t) {
+    static int BFGetImageCount() {
         /*
+         * From BioFormats docs:
          * getEffectiveSizeC() * getSizeZ() * getSizeT() == getImageCount() regardless
          * of the result of isRGB().
          */
@@ -505,133 +416,122 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_is_rgb")
     // if one openbytes call gives multiple colors
     // ie, if BFGetImageCount many calls are needed to openbytes
-    static byte BFIsRGB(IsolateThread t) {
+    static int BFIsRGB() {
         try {
-            return toCBoolean(reader.isRGB());
+            return reader.isRGB() ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-    @CEntryPoint(name = "bf_is_interleaved")
-    static byte BFIsInterleaved(IsolateThread t) {
+    static int BFIsInterleaved() {
         try {
-            return toCBoolean(reader.isInterleaved());
+            return reader.isInterleaved() ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-    @CEntryPoint(name = "bf_is_little_endian")
-    static byte BFIsLittleEndian(IsolateThread t) {
+    static int BFIsLittleEndian() {
         try {
-            return toCBoolean(reader.isLittleEndian());
+            return reader.isLittleEndian() ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-/*     @CEntryPoint(name = "bf_is_floating_point")
-    // Warning: this check is that image contains at least one floating point subimage
-    // not of the current resolution/series
-    // so I'm disabling this
-    static byte BFIsFloatingPoint(IsolateThread t) {
-        try {
-            return toCBoolean(FormatTools.isFloatingPoint(reader));
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
-        }
-    }*/
+    /*
+     * // Warning: this check is that image contains at least one floating point
+     * subimage
+     * // not of the current resolution/series
+     * // so I'm disabling this
+     * static int BFIsFloatingPoint() {
+     * try {
+     * return FormatTools.isFloatingPoint(reader) ? 1 : 0;
+     * } catch (Exception e) {
+     * saveError(getStackTrace(e));
+     * return -1;
+     * }
+     * }
+     */
 
-    @CEntryPoint(name = "bf_is_false_color")
     // https://downloads.openmicroscopy.org/bio-formats/6.14.0/api/loci/formats/IFormatReader.html#isFalseColor--
     // when we have 8 or 16 bits per channel, these might be signifying
     // indices in color profile.
     // isindexed false, isfalsecolor false -> no table
     // isindexed true, isfalsecolor false-> table must be read
-    // isindexed true, isfalsecolor true-> table can be read for precision, not obligatorily
-    static byte BFIsFalseColor(IsolateThread t) {
+    // isindexed true, isfalsecolor true-> table can be read for precision, not
+    // obligatorily
+    static int BFIsFalseColor() {
         // note: lookup tables need to be cached by us
         // as some readers such as
         // https://github.com/ome/bioformats/blob/65db5eb2bb866ebde42c8d6e2611818612432828/components/formats-bsd/src/loci/formats/in/OMETiffReader.java#L310
         // do not serve from cache
         try {
-            return toCBoolean(reader.isFalseColor());
+            return reader.isFalseColor() ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-    @CEntryPoint(name = "bf_is_indexed_color")
-    static byte BFIsIndexedColor(IsolateThread t) {
+    static int BFIsIndexedColor() {
         try {
-            return toCBoolean(reader.isIndexed());
+            return reader.isIndexed() ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-    @CEntryPoint(name = "bf_get_dimension_order")
-    static CCharPointer BFGetDimensionOrder(IsolateThread t) {
+    // writes to communicationBuffer and returns the number of bytes written
+    static int BFGetDimensionOrder() {
         try {
-            return toCString(reader.getDimensionOrder()).get();
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return WordFactory.nullPointer();
-        }
-    }
-
-    @CEntryPoint(name = "bf_is_order_certain")
-    static byte BFIsOrderCertain(IsolateThread t) {
-        try {
-            return toCBoolean(reader.isOrderCertain());
+            byte[] strBytes = reader.getDimensionOrder().getBytes();
+            communicationBuffer.rewind().put(strBytes);
+            return strBytes.length;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-    @CEntryPoint(name = "bf_open_bytes")
-    static int BFOpenBytes(IsolateThread t, int x, int y, int w, int h) {
+    static int BFIsOrderCertain() {
+        try {
+            return reader.isOrderCertain() ? 1 : 0;
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
+    // writes to communicationBuffer and returns the number of bytes written
+    static int BFOpenBytes(int x, int y, int w, int h) {
         try {
             // https://github.com/ome/bioformats/blob/4a08bfd5334323e99ad57de00e41cd15706164eb/components/formats-api/src/loci/formats/FormatReader.java#L906
             int size = w * h * FormatTools.getBytesPerPixel(reader.getPixelType()) * reader.getRGBChannelCount();
-            if (size > communicationBuffer.length) {
-                saveError("Requested tile too big; must be at most " + communicationBuffer.length
+            if (size > communicationBuffer.capacity()) {
+                saveError("Requested tile too big; must be at most " + communicationBuffer.capacity()
                         + " bytes but wanted " + size);
                 return -2;
             }
-            // TODO: for example for noninterleaved channels, we'll need to handle other
-            // planes.
-            // To implement that one would need to read the description of
-            // https://downloads.openmicroscopy.org/bio-formats/5.4.1/api/loci/formats/IFormatReader.html#getEffectiveSizeC--
-            // and understand the difference between getimagecount and getseriescount
 
-            byte[] buff = reader.openBytes(0, x, y, w, h);
-            for (int i = 0; i < buff.length; i++) {
-                communicationBuffer[i] = buff[i];
-            }
-            return buff.length;
+            communicationBuffer.rewind();
 
-            /*
-            Uncomment me when https://github.com/ome/bioformats/issues/4058
-            is fixed and bioformats updated. This saves us from redundant copying.
-            
-            reader.openBytes(0, communicationBuffer, x, y, w, h);
-            return size;*/
+            // https://github.com/ome/bioformats/issues/4058 means that
+            // openBytes wasn't designed to copy to a preallocated byte array
+            // unless it had the exact size and not greater
+            byte[] bytes = reader.openBytes(0, x, y, w, h);
+            communicationBuffer.rewind().put(bytes);
+            return bytes.length;
+
         } catch (Exception e) {
             saveError(getStackTrace(e));
-            // This is permitted:
-            // https://github.com/oracle/graal/blob/492c6016c5d9233be5de2dd9502cc81f746fc8e7/substratevm/src/com.oracle.svm.core/src/com/oracle/svm/core/c/CTypeConversionSupportImpl.java#L55
             return -1;
         }
     }
@@ -642,11 +542,10 @@ public class BFBridge {
     // https://github.com/search?q=repo%3Aome%2Fbioformats+getNativeDataType&type=code
 
     // https://bio-formats.readthedocs.io/en/latest/metadata-summary.html
-    @CEntryPoint(name = "bf_get_mpp_x")
     // 0 if not defined, -1 for error
-    static double BFGetMPPX(IsolateThread t) {
+    static double BFGetMPPX() {
         try {
-            // TODO: modify to handle multiple series
+            // Maybe consider modifying to handle multiple series
             var size = metadata.getPixelsPhysicalSizeX(0);
             if (size == null) {
                 return 0d;
@@ -659,10 +558,8 @@ public class BFBridge {
 
     }
 
-    @CEntryPoint(name = "bf_get_mpp_y")
-    static double BFGetMPPY(IsolateThread t) {
+    static double BFGetMPPY() {
         try {
-            // TODO: modify to handle multiple series
             var size = metadata.getPixelsPhysicalSizeY(0);
             if (size == null) {
                 return 0d;
@@ -675,10 +572,8 @@ public class BFBridge {
 
     }
 
-    @CEntryPoint(name = "bf_get_mpp_z")
-    static double BFGetMPPZ(IsolateThread t) {
+    static double BFGetMPPZ() {
         try {
-            // TODO: modify to handle multiple series
             var size = metadata.getPixelsPhysicalSizeZ(0);
             if (size == null) {
                 return 0d;
@@ -690,42 +585,19 @@ public class BFBridge {
         }
     }
 
-    @CEntryPoint(name = "bf_get_current_file")
-    static CCharPointer BFGetCurrentFile(IsolateThread t) {
+    static int BFIsAnyFileOpen() {
         try {
-            String file = reader.getCurrentFile();
-            if (file == null) {
-                return WordFactory.nullPointer();
-            } else {
-                return toCString(file).get();
-            }
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return WordFactory.nullPointer();
-        }
-    }
-
-    @CEntryPoint(name = "bf_is_any_file_open")
-    static byte BFIsAnyFileOpen(IsolateThread t) {
-        try {
-            return toCBoolean(reader.getCurrentFile() == null);
+            return reader.getCurrentFile() != null ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-    @CEntryPoint(name = "bftools_get_communication_buffer_size")
-    static int BFToolsGetCommunicationBufferSize(IsolateThread t) {
-        return communicationBuffer.length;
-    }
-
-    @CEntryPoint(name = "bftools_should_generate")
     // Once a file is successfully opened, call this to see if we need to
-    // regenerate the pyramid
-    // The result should be read with bioformats not openslide:
-    // https://forum.image.sc/t/bfconvert-breaks-images-with-alpha-layer-wrong-interleave/83482
-    static byte BFToolsShouldGenerate(IsolateThread t) {
+    // regenerate the pyramid.
+    // TODO: should we be less picky and measure if we have at least two layers?
+    static int BFToolsShouldGenerate() {
         try {
             int levels = reader.getResolutionCount();
             int previousX = 0;
@@ -749,21 +621,18 @@ public class BFBridge {
             if (previousX > 320 && previousY > 320) {
                 shouldGenerate = true;
             }
-            return toCBoolean(shouldGenerate);
+            return shouldGenerate ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-    @CEntryPoint(name = "bftools_generate_subresolutions")
-    // Outpath must have .ome.tiff extension
-    // tiff or ome.tiff extensions can contain subresolutions
-    // but bfconvert can sometimes produce results incompatible with others
-    // https://forum.image.sc/t/bfconvert-breaks-images-with-alpha-layer-wrong-interleave/83482
-    // so reserve ome.tiff for bioformats-reading
-    static byte BFToolsGenerateSubresolutions(IsolateThread t, CCharPointer inPathPtr, CCharPointer outPathPtr,
-            int layers) {
+    // input: two consecutive filepaths in communicationBuffer
+    // .dcm output is suggested for OpenSlide compatibility
+    // otherwise Leica scn is an alternative as it uses BigTiff.
+    // this function closes the currently open files if any
+    static int BFToolsGenerateSubresolutions(int filepathLength1, int filepathLength2, int numberOfLayers) {
         // https://bio-formats.readthedocs.io/en/latest/developers/wsi.html#pyramids-in-ome-tiff
         // https://bio-formats.readthedocs.io/en/v6.14.0/users/comlinetools/conversion.html
         // https://bio-formats.readthedocs.io/en/v6.14.0/users/comlinetools/conversion.html#cmdoption-bfconvert-pyramid-scale
@@ -771,38 +640,22 @@ public class BFBridge {
         // Meta-inf says main is in loci.formats.tools.ImageInfo
         // But there are multiple entry points.
         try {
-            String inPath = toJavaString(inPathPtr);
-            String outPath = toJavaString(outPathPtr);
+            byte[] filepath1 = new byte[filepathLength1];
+            byte[] filepath2 = new byte[filepathLength2];
+            communicationBuffer.rewind().get(filepath1).get(filepath2);
 
-            ImageConverter.main(new String[] { "-noflat", "-pyramid-resolutions", Integer.toString(layers),
+            String inPath = new String(filepath1);
+            String outPath = new String(filepath2);
+
+            ImageConverter.main(new String[] { "-noflat", "-pyramid-resolutions", Integer.toString(numberOfLayers),
                     "-pyramid-scale", "2", inPath, outPath });
+            // verify valid file
+            close();
             reader.setId(outPath);
-            return toCBoolean(true);
+            close();
+            return 1;
         } catch (Exception e) {
             saveError(getStackTrace(e));
-            return toCBoolean(false);
-        }
-    }
-
-    @CEntryPoint(name = "bfinternal_deleteme")
-    static byte BFInternalDeleteme(IsolateThread t, CCharPointer file) {
-        try {
-            System.out.println("Making class");
-            System.out.println(new org.libjpegturbo.turbojpeg.TJDecompressor());
-            System.out.println("Made class");
-
-            var s = toJavaString(file);
-
-            // Works well:
-            // var a = new FileInputStream(s);
-
-            // Doesn't work:
-            var a = new RandomAccessInputStream(s);
-            var b = new BufferedInputStream(a, 81920);
-            System.out.println(System.getProperty("java.library.path"));
-            ImageInputStream stream = new MemoryCacheImageInputStream(b);
-            return (byte) stream.readBit();
-        } catch (Exception e) {
             return -1;
         }
     }
@@ -822,7 +675,7 @@ public class BFBridge {
     }
 
     // Debug function
-    public static byte openFile(String filename) throws Exception {
+    public static int openFile(String filename) throws Exception {
         try {
             /*
              * var filee = new RandomAccessInputStream(
@@ -913,8 +766,9 @@ public class BFBridge {
     }
 
     private static void saveError(String s) {
-        lastError.close();
-        lastError = toCString(s);
+        byte[] errorBytes = s.getBytes();
+        communicationBuffer.rewind().put(errorBytes);
+        lastErrorBytes = errorBytes.length;
     }
 
     public static void main(String args[]) throws Exception {
