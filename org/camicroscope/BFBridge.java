@@ -40,9 +40,6 @@ public class BFBridge {
         // metadata.setOriginalMetadataPopulated(true);
     }
 
-    // currently this may be chosen to allow 2048*2048 four channels of 16 bits
-    // 33554432
-
     // If we need to encode special characters please see
     // https://stackoverflow.com/a/17737968
     private static ByteBuffer communicationBuffer = null;
@@ -331,7 +328,7 @@ public class BFBridge {
         }
     }
 
-    static int BFGetOptimalTİleHeight() {
+    static int BFGetOptimalTileHeight() {
         try {
             return reader.getOptimalTileHeight();
         } catch (Exception e) {
@@ -519,8 +516,6 @@ public class BFBridge {
                         + " bytes but wanted " + size);
                 return -2;
             }
-
-            communicationBuffer.rewind();
 
             // https://github.com/ome/bioformats/issues/4058 means that
             // openBytes wasn't designed to copy to a preallocated byte array
