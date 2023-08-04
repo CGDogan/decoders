@@ -85,14 +85,23 @@ public class BFBridge {
     // Input Parameter: first filenameLength bytes of communicationBuffer.
     int BFIsCompatible(int filenameLength) {
         try {
+            System.out.println("iscompatible called " + filenameLength);
             byte[] filename = new byte[filenameLength];
+                        System.out.println("iscompatible 1");
+
             communicationBuffer.rewind().get(filename);
+                                    System.out.println("iscompatible 2");
+
             // If we didn't have this line, I would change
             // "private ImageReader reader" to
             // "private IFormatReader reader"
             return reader.getReader(new String(filename)) != null ? 1 : 0;
         } catch (Exception e) {
+                                                System.out.println("iscompatible 3");
+
             saveError(getStackTrace(e));
+                                                System.out.println("iscompatible 4");
+
             return -1;
         } finally {
             close();
