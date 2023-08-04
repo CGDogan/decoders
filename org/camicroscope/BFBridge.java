@@ -90,7 +90,7 @@ public class BFBridge {
                         System.out.println("iscompatible 1");
 
             communicationBuffer.rewind().get(filename);
-                                    System.out.println("iscompatible 2 " + filenameLength + new String(filename));
+                                    System.out.println("iscompatible 2");
 
             // If we didn't have this line, I would change
             // "private static ImageReader reader" to
@@ -100,7 +100,7 @@ public class BFBridge {
                                                 System.out.println("iscompatible 3");
 
             saveError(getStackTrace(e));
-                                                System.out.println("iscompatible 4 + "+e.toString() + getStackTrace(e));
+                                                System.out.println("iscompatible 4");
 
             return -1;
         } finally {
