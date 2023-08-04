@@ -678,7 +678,7 @@ public class BFBridge {
     }
 
     // Debug function
-    public int openFile(String filename) throws Exception {
+    public static int openFile(String filename) throws Exception {
         try {
             /*
              * var filee = new RandomAccessInputStream(
@@ -779,7 +779,7 @@ public class BFBridge {
         int y = 25;
         int z = x + y;
 
-        (new BFBridge()).openFile("");
+        openFile("");
         // System.out.println("Sum of x+y = " + z);
     }
 }
