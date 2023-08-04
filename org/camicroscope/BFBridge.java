@@ -768,7 +768,7 @@ public class BFBridge {
         }
     }
 
-    private static void saveError(String s) {
+    private void saveError(String s) {
         byte[] errorBytes = s.getBytes();
         communicationBuffer.rewind().put(errorBytes);
         lastErrorBytes = errorBytes.length;
