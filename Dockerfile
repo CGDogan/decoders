@@ -14,23 +14,19 @@ fi
 
 RUN cat /platformid
 
-RUN wget -q "https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/23.1.0-dev-20230713_2040/graalvm-community-java20-linux-$(cat /platformid)-dev.tar.gz" -O graal.tar.gz && tar -xzvf graal.tar.gz > /dev/null && rm graal.tar.gz
-ENV JAVA_HOME=/graalvm-community-openjdk-20.0.1+9.1
-ENV PATH="/graalvm-community-openjdk-20.0.1+9.1/bin:$PATH"
+RUN wget -q "https://download.java.net/java/early_access/jdk21/33/GPL/openjdk-21-ea+33_linux-$(cat /platformid)_bin.tar.gz" -O jdk.tar.gz && tar -xzvf jdk.tar.gz > /dev/null && rm jdk.tar.gz
+ENV JAVA_HOME=/jdk-21
+ENV PATH="/jdk-21/bin:$PATH"
 
 RUN mkdir bfbridge/
 COPY . bfbridge
 WORKDIR bfbridge
 
-#RUN tar -xzvf javahome.tar.gz > /dev/null
-#RUN mkdir /graalvm-community-openjdk-20.0.1+9.1
-#RUN mv -t /graalvm-community-openjdk-20.0.1+9.1 labsjdk-ce-21-jvmci-23.1-b09/graal/sdk/mxbuild/linux-aarch64/GRAALVM_COMMUNITY_JAVA21/graalvm-community-openjdk-21+28.1/* 
-RUN ls /graalvm-community-openjdk-20.0.1+9.1
-
 RUN javac -cp ".:jar_files/*" org/camicroscope/BFBridge.java
-RUN native-image -Djava.awt.headless=true -cp ".:jar_files/*" --shared -H:Name=libbfbridge  --initialize-at-run-time=sun.awt,javax.imageio.ImageIO,java.awt,com.sun.imageio,sun.java2d,sun.font,loci.formats.gui.AWTImageTools,ome.specification.XMLMockObjects,ome.codecs.gui.AWTImageTools,javax.imageio.ImageTypeSpecifier --initialize-at-build-time org.camicroscope.BFBridge
-RUN ls
-RUN cp -t /usr/local/lib *.so
-RUN cp -t /usr/local/include *.h
+RUN mkdir -p /usr/lib/java
+RUN cp -r org /usr/lib/java
+RUN cp jar_files/* /usr/lib/java
+RUN jar cvf BfBridge.jar org/camicroscope/*.class
+RUN mv BfBridge.jar /usr/lib/java
 WORKDIR /
 
