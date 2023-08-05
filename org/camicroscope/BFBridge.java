@@ -2,8 +2,10 @@ package org.camicroscope;
 
 import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
+import loci.formats.ReaderWrapper;
 import loci.formats.FormatTools; // https://downloads.openmicroscopy.org/bio-formats/latest/api/loci/formats/FormatTools.html
 import loci.formats.MetadataTools;
+import loci.formats.Memoizer;
 import loci.formats.meta.IMetadata;
 import loci.formats.services.JPEGTurboServiceImpl;
 import ome.units.UNITS;
@@ -30,9 +32,59 @@ import javax.imageio.stream.MemoryCacheImageInputStream;
 import loci.common.RandomAccessInputStream;
 
 public class BFBridge {
-    private ImageReader reader = new ImageReader();
+    // To allow both cached and noncached setup with one type
+    class BFReaderWrapper extends ReaderWrapper {
+        BFReaderWrapper(IFormatReader r) {
+            super(r);
+        }
+    }
+
+    private ReaderWrapper reader;
+
+    // Our uncaching internal reader. ImageReader and ReaderWrapper
+    // both implement IFormatReader but if you need an ImageReader-only
+    // method, access this. (You could also do (inefficiently)
+    // .getReader() on "reader" and cast it to ImageReader
+    // since that's what we use)
+    private ImageReader nonCachingReader = new ImageReader();
     private IMetadata metadata = MetadataTools.createOMEXMLMetadata();
+
+    // javac -Dbfbridge.cachedir=/tmp/cachedir for faster file loading
+    private static File cachedir = null;
+
+    static {
+        String cachepath = System.getProperty("bfbridge.cachedir");
+        System.out.println("Trying bfbridge cache directory: " + cachepath);
+
+        if (cachepath == null || cachepath.equals("")) {
+            System.out.println("Skipping bfbridge cache");
+        }
+        cachedir = new File(cachepath);
+        if (cachedir != null && !cachedir.exists()) {
+            System.out.println("bfbridge cache directory does not exist, skipping!");
+            cachedir = null;
+        }
+        if (cachedir != null && !cachedir.isDirectory()) {
+            System.out.println("bfbridge cache directory is not a directory, skipping!");
+            cachedir = null;
+        }
+        if (cachedir != null && !cachedir.canRead()) {
+            System.out.println("cannot read from the bfbridge cache directory, skipping!");
+            cachedir = null;
+        }
+        if (cachedir != null && !cachedir.canWrite()) {
+            System.out.println("cannot write to the bfbridge cache directory, skipping!");
+            cachedir = null;
+        }
+    }
+
     {
+        if (cachedir == null) {
+            reader = new BFReaderWrapper(nonCachingReader);
+        } else {
+            reader = new Memoizer(nonCachingReader, cachedir);
+        }
+
         // Use the easier resolution API
         reader.setFlattenedResolutions(false);
         reader.setMetadataStore(metadata);
@@ -71,12 +123,6 @@ public class BFBridge {
         communicationBuffer = b;
     }
 
-    // the user should clear communicationBuffer
-    void BFReset() {
-        close();
-        communicationBuffer = null;
-    }
-
     int BFGetErrorLength() {
         return lastErrorBytes;
     }
@@ -90,7 +136,10 @@ public class BFBridge {
             // If we didn't have this line, I would change
             // "private ImageReader reader" to
             // "private IFormatReader reader"
-            return reader.getReader(new String(filename)) != null ? 1 : 0;
+            // and we would access only through the WrappedReader/Memoizer
+            // and not the ImageReader
+
+            return nonCachingReader.getReader(new String(filename)) != null ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
