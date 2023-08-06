@@ -33,7 +33,7 @@ import loci.common.RandomAccessInputStream;
 
 public class BFBridge {
     // To allow both cached and noncached setup with one type
-    class BFReaderWrapper extends ReaderWrapper {
+    private class BFReaderWrapper extends ReaderWrapper {
         BFReaderWrapper(IFormatReader r) {
             super(r);
         }
@@ -139,6 +139,7 @@ public class BFBridge {
             // and we would access only through the WrappedReader/Memoizer
             // and not the ImageReader
 
+            close();
             return nonCachingReader.getReader(new String(filename)) != null ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
