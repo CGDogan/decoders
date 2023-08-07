@@ -19,14 +19,18 @@ ENV JAVA_HOME=/jdk-21
 ENV PATH="/jdk-21/bin:$PATH"
 
 RUN mkdir bfbridge/
-COPY . bfbridge
 WORKDIR bfbridge
+COPY . .
 
 RUN javac -cp ".:jar_files/*" org/camicroscope/BFBridge.java
-RUN mkdir -p /usr/lib/java
-RUN cp -r org /usr/lib/java
-RUN cp jar_files/* /usr/lib/java
-RUN jar cvf BfBridge.jar org/camicroscope/*.class
-RUN mv BfBridge.jar /usr/lib/java
-WORKDIR /
 
+RUN mkdir -p /usr/lib/java
+RUN cp jar_files/* /usr/lib/java
+
+RUN jar cv0f BfBridge.jar org/camicroscope/*.class
+RUN mv BfBridge.jar /usr/lib/java
+
+# Alternatively, we could have moved the class files with their folders directly
+# RUN cp -r org /usr/lib/java
+
+WORKDIR /
