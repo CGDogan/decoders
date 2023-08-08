@@ -149,7 +149,7 @@ public class BFBridge {
         }
     }
 
-        int BFIsAnyFileOpen() {
+    int BFIsAnyFileOpen() {
         try {
             return reader.getCurrentFile() != null ? 1 : 0;
         } catch (Exception e) {
@@ -254,7 +254,7 @@ public class BFBridge {
         }
     }
 
-   int BFGetSeriesCount() {
+    int BFGetSeriesCount() {
         try {
             return reader.getSeriesCount();
         } catch (Exception e) {
@@ -374,7 +374,7 @@ public class BFBridge {
         }
     }
 
-       // number of planes in current series.
+    // number of planes in current series.
     int BFGetImageCount() {
         /*
          * From BioFormats docs:
@@ -388,7 +388,6 @@ public class BFBridge {
             return -1;
         }
     }
-
 
     // writes to communicationBuffer and returns the number of bytes written
     int BFGetDimensionOrder() {
@@ -547,35 +546,39 @@ public class BFBridge {
             byte[] table1D = new byte[len * sublen];
             for (int i = 0; i < len; i++) {
                 for (int j = 0; j < sublen; j++) {
-                    table1D[i*sublen + j] = table[i][j];
+                    table1D[i * sublen + j] = table[i][j];
                 }
             }
             communicationBuffer.rewind().put(table1D);
             return len * sublen;
-        } catch(Exception e) {
+        } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
+    // Returns total number of bytes written
     int BFGet16BitLookupTable() {
-       try {
-            byte[][] table = reader.get16BitLookupTable();
+        try {
+            short[][] table = reader.get16BitLookupTable();
             int len = table.length;
             int sublen = table[0].length;
             if (sublen != 65536) {
                 saveError("BFGet16BitLookupTable expected 65536 rowlength");
                 return -2;
             }
-            byte[] table1D = new byte[len * sublen];
+            short[] table1D = new short[len * sublen];
             for (int i = 0; i < len; i++) {
                 for (int j = 0; j < sublen; j++) {
-                    table1D[i*sublen + j] = table[i][j];
+                    table1D[i * sublen + j] = table[i][j];
                 }
             }
-            communicationBuffer.rewind().put(table1D);
-            return len * sublen;
-        } catch(Exception e) {
+            communicationBuffer.rewind();
+            for (int i = 0; i < table1D.length; i++) {
+                communicationBuffer.putShort(table1D[i]);
+            }
+            return 2 * len * sublen;
+        } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
