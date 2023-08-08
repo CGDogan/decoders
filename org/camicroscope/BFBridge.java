@@ -534,8 +534,56 @@ public class BFBridge {
         }
     }
 
+    // Serializes a 2D table with 2nd dimension length 256
+    int BFGet8BitLookupTable() {
+        try {
+            byte[][] table = reader.get8BitLookupTable();
+            int len = table.length;
+            int sublen = table[0].length;
+            if (sublen != 256) {
+                saveError("BFGet8BitLookupTable expected 256 rowlength");
+                return -2;
+            }
+            byte[] table1D = new byte[len * sublen];
+            for (int i = 0; i < len; i++) {
+                for (int j = 0; j < sublen; j++) {
+                    table1D[i*sublen + j] = table[i][j];
+                }
+            }
+            communicationBuffer.rewind().put(table1D);
+            return len * sublen;
+        } catch(Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
+    int BFGet16BitLookupTable() {
+       try {
+            byte[][] table = reader.get16BitLookupTable();
+            int len = table.length;
+            int sublen = table[0].length;
+            if (sublen != 65536) {
+                saveError("BFGet16BitLookupTable expected 65536 rowlength");
+                return -2;
+            }
+            byte[] table1D = new byte[len * sublen];
+            for (int i = 0; i < len; i++) {
+                for (int j = 0; j < sublen; j++) {
+                    table1D[i*sublen + j] = table[i][j];
+                }
+            }
+            communicationBuffer.rewind().put(table1D);
+            return len * sublen;
+        } catch(Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
+    // plane is 0, default
     // writes to communicationBuffer and returns the number of bytes written
-    int BFOpenBytes(int x, int y, int w, int h) {
+    int BFOpenBytes(int plane, int x, int y, int w, int h) {
         try {
             // https://github.com/ome/bioformats/issues/4058 means that
             // openBytes wasn't designed to copy to a preallocated byte array
@@ -567,12 +615,13 @@ public class BFBridge {
     // some types are
     // https://github.com/search?q=repo%3Aome%2Fbioformats+getNativeDataType&type=code
 
+    // series is 0, default
     // https://bio-formats.readthedocs.io/en/latest/metadata-summary.html
     // 0 if not defined, -1 for error
-    double BFGetMPPX() {
+    double BFGetMPPX(int series) {
         try {
             // Maybe consider modifying to handle multiple series
-            var size = metadata.getPixelsPhysicalSizeX(0);
+            var size = metadata.getPixelsPhysicalSizeX(series);
             if (size == null) {
                 return 0d;
             }
@@ -584,9 +633,9 @@ public class BFBridge {
 
     }
 
-    double BFGetMPPY() {
+    double BFGetMPPY(int series) {
         try {
-            var size = metadata.getPixelsPhysicalSizeY(0);
+            var size = metadata.getPixelsPhysicalSizeY(series);
             if (size == null) {
                 return 0d;
             }
@@ -597,9 +646,9 @@ public class BFBridge {
         }
     }
 
-    double BFGetMPPZ() {
+    double BFGetMPPZ(int series) {
         try {
-            var size = metadata.getPixelsPhysicalSizeZ(0);
+            var size = metadata.getPixelsPhysicalSizeZ(series);
             if (size == null) {
                 return 0d;
             }
