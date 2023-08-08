@@ -149,23 +149,16 @@ public class BFBridge {
         }
     }
 
-    /*
-     * bf_is_compatible_disregarding_filename:
-     * I think not needed?
-     * Loop over IFormatReaders
-     * use IFormatreader.isthistype with stream type
-     * 
-     * 
-     * List<IFormatReader> potentialReaders = new ArrayList<IFormatReader>();
-     * for (int i=0; i<readers.length; i++) {
-     * if (isThisType(readers[i], stream)) potentialReaders.add(readers[i]);
-     * }
-     * IFormatReader[] readers = new IFormatReader[potentialReaders.size()];
-     * potentialReaders.toArray(readers);
-     * return readers;
-     */
+        int BFIsAnyFileOpen() {
+        try {
+            return reader.getCurrentFile() != null ? 1 : 0;
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
 
-    // Do not open another file without closing current
+    // Please do not open another file without calling BFClose
     // Input Parameter: first filenameLength bytes of communicationBuffer
     int BFOpen(int filenameLength) {
         try {
@@ -176,6 +169,18 @@ public class BFBridge {
         } catch (Exception e) {
             saveError(getStackTrace(e));
             close();
+            return -1;
+        }
+    }
+
+    // writes to communicationBuffer and returns the number of bytes written
+    int BFGetFormat() {
+        try {
+            byte[] formatBytes = reader.getFormat().getBytes();
+            communicationBuffer.rewind().put(formatBytes);
+            return formatBytes.length;
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
             return -1;
         }
     }
@@ -194,6 +199,25 @@ public class BFBridge {
             return -1;
         } finally {
             close();
+        }
+    }
+
+    // writes to communicationBuffer and returns the number of bytes written
+    // 0 if no file was opened
+    // remember that this function likely returns a full path
+    int BFGetCurrentFile() {
+        try {
+            String file = reader.getCurrentFile();
+            if (file == null) {
+                return 0;
+            } else {
+                byte[] characters = file.getBytes();
+                communicationBuffer.rewind().put(characters);
+                return characters.length;
+            }
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
         }
     }
 
@@ -220,28 +244,30 @@ public class BFBridge {
         }
     }
 
-    // writes to communicationBuffer and returns the number of bytes written
-    // 0 if no file was opened
-    // remember that this function likely returns a full path
-    int BFGetCurrentFile() {
+    int BFClose() {
         try {
-            String file = reader.getCurrentFile();
-            if (file == null) {
-                return 0;
-            } else {
-                byte[] characters = file.getBytes();
-                communicationBuffer.rewind().put(characters);
-                return characters.length;
-            }
+            reader.close();
+            return 1;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-    int BFClose() {
+   int BFGetSeriesCount() {
         try {
-            reader.close();
+            return reader.getSeriesCount();
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
+    // with the easy viewing api we use, a series is an independent one.
+    // A single image or a multilayer pyramid.
+    int BFSetCurrentSeries(int no) {
+        try {
+            reader.setSeries(no);
             return 1;
         } catch (Exception e) {
             saveError(getStackTrace(e));
@@ -293,27 +319,6 @@ public class BFBridge {
      * }
      */
 
-    // with the easy viewing api we use, a series is an independent one.
-    // A single image or a multilayer pyramid.
-    int BFSetSeries(int no) {
-        try {
-            reader.setSeries(no);
-            return 1;
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
-        }
-    }
-
-    int BFGetSeriesCount() {
-        try {
-            return reader.getSeriesCount();
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
-        }
-    }
-
     int BFGetSizeX() {
         try {
             // For current resolution
@@ -327,6 +332,15 @@ public class BFBridge {
     int BFGetSizeY() {
         try {
             return reader.getSizeY();
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
+    int BFGetSizeC() {
+        try {
+            return reader.getSizeC();
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
@@ -351,18 +365,46 @@ public class BFBridge {
         }
     }
 
-    int BFGetSizeC() {
+    int BFGetEffectiveSizeC() {
         try {
-            return reader.getSizeC();
+            return reader.getEffectiveSizeC();
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
         }
     }
 
-    int BFGetEffectiveSizeC() {
+       // number of planes in current series.
+    int BFGetImageCount() {
+        /*
+         * From BioFormats docs:
+         * getEffectiveSizeC() * getSizeZ() * getSizeT() == getImageCount() regardless
+         * of the result of isRGB().
+         */
         try {
-            return reader.getEffectiveSizeC();
+            return reader.getImageCount();
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
+
+    // writes to communicationBuffer and returns the number of bytes written
+    int BFGetDimensionOrder() {
+        try {
+            byte[] strBytes = reader.getDimensionOrder().getBytes();
+            communicationBuffer.rewind().put(strBytes);
+            return strBytes.length;
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
+    int BFIsOrderCertain() {
+        try {
+            return reader.isOrderCertain() ? 1 : 0;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
@@ -381,18 +423,6 @@ public class BFBridge {
     int BFGetOptimalTileHeight() {
         try {
             return reader.getOptimalTileHeight();
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
-        }
-    }
-
-    // writes to communicationBuffer and returns the number of bytes written
-    int BFGetFormat() {
-        try {
-            byte[] formatBytes = reader.getFormat().getBytes();
-            communicationBuffer.rewind().put(formatBytes);
-            return formatBytes.length;
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1;
@@ -447,21 +477,6 @@ public class BFBridge {
         }
     }
 
-    // number of planes in current series.
-    int BFGetImageCount() {
-        /*
-         * From BioFormats docs:
-         * getEffectiveSizeC() * getSizeZ() * getSizeT() == getImageCount() regardless
-         * of the result of isRGB().
-         */
-        try {
-            return reader.getImageCount();
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
-        }
-    }
-
     // if one openbytes call gives multiple colors
     // ie, if BFGetImageCount many calls are needed to openbytes
     int BFIsRGB() {
@@ -491,28 +506,12 @@ public class BFBridge {
         }
     }
 
-    /*
-     * // Warning: this check is that image contains at least one floating point
-     * subimage
-     * // not of the current resolution/series
-     * // so I'm disabling this
-     * int BFIsFloatingPoint() {
-     * try {
-     * return FormatTools.isFloatingPoint(reader) ? 1 : 0;
-     * } catch (Exception e) {
-     * saveError(getStackTrace(e));
-     * return -1;
-     * }
-     * }
-     */
-
     // https://downloads.openmicroscopy.org/bio-formats/6.14.0/api/loci/formats/IFormatReader.html#isFalseColor--
     // when we have 8 or 16 bits per channel, these might be signifying
     // indices in color profile.
     // isindexed false, isfalsecolor false -> no table
     // isindexed true, isfalsecolor false-> table must be read
-    // isindexed true, isfalsecolor true-> table can be read for precision, not
-    // obligatorily
+    // isindexed true, isfalsecolor true-> table can be read, not obligatorily
     int BFIsFalseColor() {
         // note: lookup tables need to be cached by us
         // as some readers such as
@@ -536,47 +535,30 @@ public class BFBridge {
     }
 
     // writes to communicationBuffer and returns the number of bytes written
-    int BFGetDimensionOrder() {
-        try {
-            byte[] strBytes = reader.getDimensionOrder().getBytes();
-            communicationBuffer.rewind().put(strBytes);
-            return strBytes.length;
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
-        }
-    }
-
-    int BFIsOrderCertain() {
-        try {
-            return reader.isOrderCertain() ? 1 : 0;
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
-        }
-    }
-
-    // writes to communicationBuffer and returns the number of bytes written
     int BFOpenBytes(int x, int y, int w, int h) {
         try {
-            // https://github.com/ome/bioformats/blob/4a08bfd5334323e99ad57de00e41cd15706164eb/components/formats-api/src/loci/formats/FormatReader.java#L906
-            int size = w * h * FormatTools.getBytesPerPixel(reader.getPixelType()) * reader.getRGBChannelCount();
-            if (size > communicationBuffer.capacity()) {
-                saveError("Requested tile too big; must be at most " + communicationBuffer.capacity()
-                        + " bytes but wanted " + size);
-                return -2;
-            }
-
             // https://github.com/ome/bioformats/issues/4058 means that
             // openBytes wasn't designed to copy to a preallocated byte array
             // unless it had the exact size and not greater
             byte[] bytes = reader.openBytes(0, x, y, w, h);
             communicationBuffer.rewind().put(bytes);
             return bytes.length;
-
         } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
+            // Was it because of exceeding buffer?
+            // https://github.com/ome/bioformats/blob/4a08bfd5334323e99ad57de00e41cd15706164eb/components/formats-api/src/loci/formats/FormatReader.java#L906
+            // https://downloads.openmicroscopy.org/bio-formats/6.13.0/api/loci/formats/ImageReader.html#openBytes-int-byte:A-
+            try {
+                int size = w * h * FormatTools.getBytesPerPixel(reader.getPixelType()) * reader.getRGBChannelCount();
+                if (size > communicationBuffer.capacity()) {
+                    saveError("Requested tile too big; must be at most " + communicationBuffer.capacity()
+                            + " bytes but wanted " + size);
+                    return -2;
+                }
+            } catch (Exception e2) {
+            } finally {
+                saveError(getStackTrace(e));
+                return -1;
+            }
         }
     }
 
@@ -613,7 +595,6 @@ public class BFBridge {
             saveError(getStackTrace(e));
             return -1d;
         }
-
     }
 
     double BFGetMPPZ() {
@@ -626,15 +607,6 @@ public class BFBridge {
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1d;
-        }
-    }
-
-    int BFIsAnyFileOpen() {
-        try {
-            return reader.getCurrentFile() != null ? 1 : 0;
-        } catch (Exception e) {
-            saveError(getStackTrace(e));
-            return -1;
         }
     }
 
@@ -672,6 +644,10 @@ public class BFBridge {
         }
     }
 
+    // TODO: this function is not ready
+    // -series 0 maybe?
+    // compression
+    // https://github.com/ome/bioformats/blob/develop/components/formats-bsd/src/loci/formats/codec/CompressionType.java#L47
     // input: two consecutive filepaths in communicationBuffer
     // .dcm output is suggested for OpenSlide compatibility
     // otherwise Leica scn is an alternative as it uses BigTiff.
@@ -811,8 +787,12 @@ public class BFBridge {
 
     private void saveError(String s) {
         byte[] errorBytes = s.getBytes();
-        communicationBuffer.rewind().put(errorBytes);
-        lastErrorBytes = errorBytes.length;
+        int bytes_len = errorBytes.length;
+        // -1 to account for the null byte for security
+        bytes_len = Math.min(bytes_len, communicationBuffer.capacity() - 1);
+        // Trim error message
+        communicationBuffer.rewind().put(errorBytes, 0, bytes_len);
+        lastErrorBytes = bytes_len;
     }
 
     public static void main(String args[]) throws Exception {
