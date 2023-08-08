@@ -593,6 +593,7 @@ public class BFBridge {
             // unless it had the exact size and not greater
             byte[] bytes = reader.openBytes(0, x, y, w, h);
             communicationBuffer.rewind().put(bytes);
+            System.out.println("Bytes: " + bytes.length);
             return bytes.length;
         } catch (Exception e) {
             // Was it because of exceeding buffer?
