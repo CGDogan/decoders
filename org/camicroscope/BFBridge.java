@@ -58,8 +58,9 @@ public class BFBridge {
 
         if (cachepath == null || cachepath.equals("")) {
             System.out.println("Skipping bfbridge cache");
+        } else {
+            cachedir = new File(cachepath);
         }
-        cachedir = new File(cachepath);
         if (cachedir != null && !cachedir.exists()) {
             System.out.println("bfbridge cache directory does not exist, skipping!");
             cachedir = null;
@@ -593,7 +594,6 @@ public class BFBridge {
             // unless it had the exact size and not greater
             byte[] bytes = reader.openBytes(0, x, y, w, h);
             communicationBuffer.rewind().put(bytes);
-            System.out.println("Bytes: " + bytes.length);
             return bytes.length;
         } catch (Exception e) {
             // Was it because of exceeding buffer?
@@ -842,7 +842,7 @@ public class BFBridge {
         byte[] errorBytes = s.getBytes();
         int bytes_len = errorBytes.length;
         // -1 to account for the null byte for security
-        bytes_len = Math.min(bytes_len, communicationBuffer.capacity() - 1);
+        bytes_len = Math.min(bytes_len, Math.max(communicationBuffer.capacity() - 1, 0));
         // Trim error message
         communicationBuffer.rewind().put(errorBytes, 0, bytes_len);
         lastErrorBytes = bytes_len;
