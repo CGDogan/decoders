@@ -32,13 +32,50 @@ import javax.imageio.stream.MemoryCacheImageInputStream;
 import loci.common.RandomAccessInputStream;
 
 public class BFBridge {
-    // To allow both cached and noncached setup with one type
+    // To allow both cached and noncached setup with one type:
+    // ImageReader is our noncached reader but it doesn't
+    // implement ReaderWrapper so make a wrapper to make substitution
+    // possible with Memoizer
     private class BFReaderWrapper extends ReaderWrapper {
         BFReaderWrapper(IFormatReader r) {
             super(r);
         }
     }
 
+    // BioFormats doesn't give us control over thumbnail sizes
+    // unless we define a wrapper for FormatTools.openThumbBytes
+    // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L1287
+    private class BFThumbnailWrapper extends ReaderWrapper {
+        // exact sizes
+        private int thumbX = 256;
+        private int thumbY = 256;
+
+        // For our use
+        void setThumbSizeX(int x) {
+            thumbX = x;
+        }
+
+        void setThumbSizeY(int y) {
+            thumbY = y;
+        }
+
+        // For FormatTools.openThumbBytes
+        @Override
+        public int getThumbSizeX() {
+            return thumbX;
+        }
+
+        @Override
+        public int getThumbSizeY() {
+            return thumbY;
+        }
+
+        BFThumbnailWrapper(IFormatReader r) {
+            super(r);
+        }
+    }
+
+    private BFThumbnailWrapper readerWithThumbnailSizes;
     private ReaderWrapper reader;
 
     // Our uncaching internal reader. ImageReader and ReaderWrapper
@@ -47,11 +84,23 @@ public class BFBridge {
     // .getReader() on "reader" and cast it to ImageReader
     // since that's what we use)
     private ImageReader nonCachingReader = new ImageReader();
+
+    // As a summary, nonCachingReader is the reader
+    // which is wrapped by BFReaderWrapper or Memoizer
+    // which is sometimes wrapped by readerWithThumbnailSizes
+    // For performance, this library calls the readerWithThumbnailSizes
+    // wrapper only when it needs thumbnail.
+    // Please note that reinstantiating nonCachingReader requires
+    // reinstantiating "ReaderWrapper reader" (BFReaderWrapper or Memoizer).
+    // And reinstantiating the latter requires reinstantiating
+    // the readerWithThumbnailSizes
+
     private IMetadata metadata = MetadataTools.createOMEXMLMetadata();
 
     // javac -Dbfbridge.cachedir=/tmp/cachedir for faster file loading
     private static File cachedir = null;
 
+    // Initialize cache
     static {
         String cachepath = System.getProperty("bfbridge.cachedir");
         System.out.println("Trying bfbridge cache directory: " + cachepath);
@@ -79,6 +128,7 @@ public class BFBridge {
         }
     }
 
+    // Initialize our instance reader
     {
         if (cachedir == null) {
             reader = new BFReaderWrapper(nonCachingReader);
@@ -91,6 +141,8 @@ public class BFBridge {
         reader.setMetadataStore(metadata);
         // Save file-specific metadata as well?
         // metadata.setOriginalMetadataPopulated(true);
+
+        readerWithThumbnailSizes = new BFThumbnailWrapper(reader);
     }
 
     // If we need to encode special characters please see
@@ -611,6 +663,34 @@ public class BFBridge {
                 saveError(getStackTrace(e));
                 return -1;
             }
+        }
+    }
+
+    // should be called after calling BFSetCurrentResolution with the/a relevant
+    // resolution, and the caller should ensure the correct aspect ratio
+    // for the width and height.
+    // writes to communicationBuffer and returns the number of bytes written
+    // prepares 3 channel or 4 channel, same sample format
+    // and bitlength (but made unsigned if was int8 or int16 or int32)
+    int BFOpenThumbBytes(int plane, int width, int height) {
+        try {
+            /*float yOverX = reader.getSizeY() / reader.getSizeX();
+            float xOverY = 1/yToX;
+            int width = Math.min(maxWidth, maxHeight * xOverY);
+            int height = Math.min(maxHeight, maxWidth * yOverX);*/
+
+            readerWithThumbnailSizes.setThumbSizeX(width);
+            readerWithThumbnailSizes.setThumbSizeY(height);
+
+            // We could also call openThumbBytes on the class
+            // but there's no need to, since the caller should already
+            // have set a relevant resolution
+            byte[] bytes = FormatTools.openThumbBytes(readerWithThumbnailSizes, plane);
+            communicationBuffer.rewind().put(bytes);
+            return bytes.length;
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
         }
     }
 
