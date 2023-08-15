@@ -863,10 +863,10 @@ public class BFBridge {
             System.out.println("Dirlist: " + Arrays.toString(files1));
 
             // http://127.0.0.1:4010/img/IIP/raw/?DeepZoom=/images/OS-1.ndpi.tiff_files/17/76_16.jpg
-            reader.setId("/images/OS-1.ndpi.tiff");
+            /*reader.setId("/images/OS-1.ndpi.tiff");
             reader.setResolution(0);
             byte[] bytes = new byte[3145728];
-            reader.openBytes(0, bytes, 77824, 16384, 1024, 1024);
+            reader.openBytes(0, bytes, 77824, 16384, 1024, 1024);*/
             // TJUnitTest.main(new String[0]);
 
             System.out.println("Step 1");
