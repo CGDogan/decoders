@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -215,32 +214,13 @@ public class BFBridge {
     // Please do not open another file without calling BFClose
     // Input Parameter: first filenameLength bytes of communicationBuffer
     int BFOpen(int filenameLength) {
-        String name = "??";
         try {
             byte[] filename = new byte[filenameLength];
             communicationBuffer.rewind().get(filename);
-            name = new String(filename);
-            reader.setId(name);
+            reader.setId(new String(filename));
             return 1;
         } catch (Exception e) {
-            saveError("Error while opening " + name + ": " + getStackTrace(e));
-            System.out.println("MY side: Error while opening " + name + ": " + getStackTrace(e));
-            try {
-var eee =  new java.io.RandomAccessFile  (name, "r");
-                System.out.println("success???");
-
-
-            }catch(Exception ee) {
-                System.out.println("what??");
-                try {
-                System.out.println();
-                var k = new BigInteger(1, name.getBytes("UTF-8")).toString(16);
-                                System.out.println(k);
-                } catch(Exception eeee) {
-
-                }
-            }
-
+            saveError(getStackTrace(e));
             close();
             return -1;
         }
@@ -707,21 +687,6 @@ var eee =  new java.io.RandomAccessFile  (name, "r");
             // have set a relevant resolution
             byte[] bytes = FormatTools.openThumbBytes(readerWithThumbnailSizes, plane);
             communicationBuffer.rewind().put(bytes);
-            System.out.println("Here are orig buffer bytes");
-                        System.out.println(bytes[0]);
-                                                System.out.println(bytes[1]);
-            /*byte[] bytes2 = reader.openThumbBytes(plane);
-                        System.out.println("Here are buffer bytes " + reader.getThumbSizeX() + " " + reader.getThumbSizeY());
-                        System.out.println(bytes2[0]);
-                                                System.out.println(bytes2[1]);
-
-                            int k = 0;
-                            for (var a : bytes2)
-                                if (a > k)
-                                k = a;
-                                                                                System.out.println(k);*/
-
-
             return bytes.length;
         } catch (Exception e) {
             saveError(getStackTrace(e));
@@ -865,34 +830,12 @@ var eee =  new java.io.RandomAccessFile  (name, "r");
     // Debug function
     public int openFile(String filename) throws Exception {
         try {
-
-            System.out.println("testing bufferbytes");
-            var r = new ImageReader();
-r.setId("/Users/zerf/Downloads/Github-repos/CGDogan/camic-Distro/images/60MB.dcm");
-//r.setId("/Users/zerf/Downloads/dcm0/DCM_0.dcm");
-
-var bye = r.openThumbBytes(0);
-System.out.println(bye[0]);
-System.out.println(bye[1]);
-System.out.println(bye.length);
-String[] filses = r.getUsedFiles();
-for (var ab : filses)
-System.out.println(ab);
-System.out.println("maw");
-
-                            int k = 0;
-                            for (var a : bye)
-                                if (a > k)
-                                k = a;
-                                                                                System.out.println(k);
-
-
             /*
              * var filee = new RandomAccessInputStream(
              * "/Users/zerf/Desktop/Screenshot 2023-06-30 at 15.31.08.png");
              * ImageInputStream streamold = new MemoryCacheImageInputStream(new
              * BufferedInputStream(filee));
-             * var arr = reader.getPotentialReaders(filee);
+             * var arr = (new ImageReader()).getPotentialReaders(filee);
              * System.out.println(arr);
              * reader.setFlattenedResolutions(false);
              * 
