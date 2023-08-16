@@ -679,7 +679,10 @@ public class BFBridge {
             /*float yOverX = reader.getSizeY() / reader.getSizeX();
             float xOverY = 1/yToX;
             int width = Math.min(maxWidth, maxHeight * xOverY);
-            int height = Math.min(maxHeight, maxWidth * yOverX);*/
+            int height = Math.min(maxHeight, maxWidth * yOverX);
+            Also potentially a check so that if width is greater than getSizeX
+            or likewise for height, use image resolution.
+            */
 
             readerWithThumbnailSizes.setThumbSizeX(width);
             readerWithThumbnailSizes.setThumbSizeY(height);
