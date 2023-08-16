@@ -36,7 +36,7 @@ public class BFBridge {
     // ImageReader is our noncached reader but it doesn't
     // implement ReaderWrapper so make a wrapper to make substitution
     // possible with Memoizer
-    private class BFReaderWrapper extends ReaderWrapper {
+    private final class BFReaderWrapper extends ReaderWrapper {
         BFReaderWrapper(IFormatReader r) {
             super(r);
         }
@@ -45,7 +45,7 @@ public class BFBridge {
     // BioFormats doesn't give us control over thumbnail sizes
     // unless we define a wrapper for FormatTools.openThumbBytes
     // https://github.com/ome/bioformats/blob/9cb6cfaaa5361bcc4ed9f9841f2a4caa29aad6c7/components/formats-api/src/loci/formats/FormatTools.java#L1287
-    private class BFThumbnailWrapper extends ReaderWrapper {
+    private final class BFThumbnailWrapper extends ReaderWrapper {
         // exact sizes
         private int thumbX = 256;
         private int thumbY = 256;
@@ -75,15 +75,15 @@ public class BFBridge {
         }
     }
 
-    private BFThumbnailWrapper readerWithThumbnailSizes;
-    private ReaderWrapper reader;
+    private final BFThumbnailWrapper readerWithThumbnailSizes;
+    private final ReaderWrapper reader;
 
     // Our uncaching internal reader. ImageReader and ReaderWrapper
     // both implement IFormatReader but if you need an ImageReader-only
     // method, access this. (You could also do (inefficiently)
     // .getReader() on "reader" and cast it to ImageReader
     // since that's what we use)
-    private ImageReader nonCachingReader = new ImageReader();
+    private final ImageReader nonCachingReader = new ImageReader();
 
     // As a summary, nonCachingReader is the reader
     // which is wrapped by BFReaderWrapper or Memoizer
@@ -95,37 +95,39 @@ public class BFBridge {
     // And reinstantiating the latter requires reinstantiating
     // the readerWithThumbnailSizes
 
-    private IMetadata metadata = MetadataTools.createOMEXMLMetadata();
+    private final IMetadata metadata = MetadataTools.createOMEXMLMetadata();
 
     // javac -Dbfbridge.cachedir=/tmp/cachedir for faster file loading
-    private static File cachedir = null;
+    private static final File cachedir;
 
     // Initialize cache
     static {
         String cachepath = System.getProperty("bfbridge.cachedir");
         System.out.println("Trying bfbridge cache directory: " + cachepath);
 
+        File _cachedir = null;
         if (cachepath == null || cachepath.equals("")) {
             System.out.println("Skipping bfbridge cache");
         } else {
-            cachedir = new File(cachepath);
+            _cachedir = new File(cachepath);
         }
-        if (cachedir != null && !cachedir.exists()) {
+        if (_cachedir != null && !_cachedir.exists()) {
             System.out.println("bfbridge cache directory does not exist, skipping!");
-            cachedir = null;
+            _cachedir = null;
         }
-        if (cachedir != null && !cachedir.isDirectory()) {
+        if (_cachedir != null && !_cachedir.isDirectory()) {
             System.out.println("bfbridge cache directory is not a directory, skipping!");
-            cachedir = null;
+            _cachedir = null;
         }
-        if (cachedir != null && !cachedir.canRead()) {
+        if (_cachedir != null && !_cachedir.canRead()) {
             System.out.println("cannot read from the bfbridge cache directory, skipping!");
-            cachedir = null;
+            _cachedir = null;
         }
-        if (cachedir != null && !cachedir.canWrite()) {
+        if (_cachedir != null && !_cachedir.canWrite()) {
             System.out.println("cannot write to the bfbridge cache directory, skipping!");
-            cachedir = null;
+            _cachedir = null;
         }
+        cachedir = _cachedir;
     }
 
     // Initialize our instance reader
