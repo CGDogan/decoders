@@ -3,10 +3,15 @@ package org.camicroscope;
 import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
 import loci.formats.ReaderWrapper;
-import loci.formats.FormatTools; // https://downloads.openmicroscopy.org/bio-formats/latest/api/loci/formats/FormatTools.html
-import loci.formats.MetadataTools;
+ // https://downloads.openmicroscopy.org/bio-formats/7.0.0/api/loci/formats/FormatTools.html
+import loci.formats.FormatTools;
+// https://downloads.openmicroscopy.org/bio-formats/7.0.0/api/loci/formats/MetadataTools.html
+//import loci.formats.MetadataTools;
+// https://downloads.openmicroscopy.org/bio-formats/7.0.0/api/loci/formats/services/OMEXMLServiceImpl.html
+//import loci.formats.services.OMEXMLServiceImpl;
+import loci.formats.ome.OMEXMLMetadataImpl;
 import loci.formats.Memoizer;
-import loci.formats.meta.IMetadata;
+import loci.formats.ome.OMEXMLMetadata;
 import loci.formats.services.JPEGTurboServiceImpl;
 import ome.units.UNITS;
 
@@ -95,7 +100,7 @@ public class BFBridge {
     // And reinstantiating the latter requires reinstantiating
     // the readerWithThumbnailSizes
 
-    private final IMetadata metadata = MetadataTools.createOMEXMLMetadata();
+    private final OMEXMLMetadataImpl metadata = new OMEXMLMetadataImpl();
 
     // javac -Dbfbridge.cachedir=/tmp/cachedir for faster file loading
     private static final File cachedir;
@@ -127,6 +132,9 @@ public class BFBridge {
             System.out.println("cannot write to the bfbridge cache directory, skipping!");
             _cachedir = null;
         }
+        if (_cachedir != null) {
+            System.out.println("activating bfbridge cache");
+        }
         cachedir = _cachedir;
     }
 
@@ -141,7 +149,7 @@ public class BFBridge {
         // Use the easier resolution API
         reader.setFlattenedResolutions(false);
         reader.setMetadataStore(metadata);
-        // Save file-specific metadata as well?
+        // Save format-specific metadata as well?
         // metadata.setOriginalMetadataPopulated(true);
 
         readerWithThumbnailSizes = new BFThumbnailWrapper(reader);
@@ -676,13 +684,14 @@ public class BFBridge {
     // and bitlength (but made unsigned if was int8 or int16 or int32)
     int BFOpenThumbBytes(int plane, int width, int height) {
         try {
-            /*float yOverX = reader.getSizeY() / reader.getSizeX();
-            float xOverY = 1/yToX;
-            int width = Math.min(maxWidth, maxHeight * xOverY);
-            int height = Math.min(maxHeight, maxWidth * yOverX);
-            Also potentially a check so that if width is greater than getSizeX
-            or likewise for height, use image resolution.
-            */
+            /*
+             * float yOverX = reader.getSizeY() / reader.getSizeX();
+             * float xOverY = 1/yToX;
+             * int width = Math.min(maxWidth, maxHeight * xOverY);
+             * int height = Math.min(maxHeight, maxWidth * yOverX);
+             * Also potentially a check so that if width is greater than getSizeX
+             * or likewise for height, use image resolution.
+             */
 
             readerWithThumbnailSizes.setThumbSizeX(width);
             readerWithThumbnailSizes.setThumbSizeY(height);
@@ -748,6 +757,22 @@ public class BFBridge {
         }
     }
 
+    int BFDumpOMEXMLMetadata() {
+        try {
+            String metadataString = metadata.dumpXML();
+            byte[] bytes = metadataString.getBytes();
+            if (bytes.length > communicationBuffer.capacity()) {
+                saveError("BFDumpOMEXMLMetadata: needed buffer of length at least " + bytes.length + " but current buffer is of length " + communicationBuffer.capacity());
+                return -2;
+            }
+            communicationBuffer.rewind().put(bytes);
+            return bytes.length;
+        } catch (Exception e) {
+            saveError(getStackTrace(e));
+            return -1;
+        }
+    }
+
     // Once a file is successfully opened, call this to see if we need to
     // regenerate the pyramid.
     // TODO: should we be less picky and measure if we have at least two layers?
@@ -805,6 +830,7 @@ public class BFBridge {
             String inPath = new String(filepath1);
             String outPath = new String(filepath2);
 
+            // TODO: series 0 and compression arg
             ImageConverter.main(new String[] { "-noflat", "-pyramid-resolutions", Integer.toString(numberOfLayers),
                     "-pyramid-scale", "2", inPath, outPath });
             // verify valid file
@@ -868,10 +894,12 @@ public class BFBridge {
             System.out.println("Dirlist: " + Arrays.toString(files1));
 
             // http://127.0.0.1:4010/img/IIP/raw/?DeepZoom=/images/OS-1.ndpi.tiff_files/17/76_16.jpg
-            /*reader.setId("/images/OS-1.ndpi.tiff");
-            reader.setResolution(0);
-            byte[] bytes = new byte[3145728];
-            reader.openBytes(0, bytes, 77824, 16384, 1024, 1024);*/
+            /*
+             * reader.setId("/images/OS-1.ndpi.tiff");
+             * reader.setResolution(0);
+             * byte[] bytes = new byte[3145728];
+             * reader.openBytes(0, bytes, 77824, 16384, 1024, 1024);
+             */
             // TJUnitTest.main(new String[0]);
 
             System.out.println("Step 1");
