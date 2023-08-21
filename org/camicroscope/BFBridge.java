@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.function.Function;
 
@@ -99,14 +100,13 @@ public class BFBridge {
     // reinstantiating "ReaderWrapper reader" (BFReaderWrapper or Memoizer).
     // And reinstantiating the latter requires reinstantiating
     // the readerWithThumbnailSizes
-
     private final OMEXMLMetadataImpl metadata = new OMEXMLMetadataImpl();
 
     // javac -Dbfbridge.cachedir=/tmp/cachedir for faster file loading
     private static final File cachedir;
 
-    // Initialize cache
     static {
+        // Initialize cache
         String cachepath = System.getProperty("bfbridge.cachedir");
         System.out.println("Trying bfbridge cache directory: " + cachepath);
 
@@ -155,8 +155,7 @@ public class BFBridge {
         readerWithThumbnailSizes = new BFThumbnailWrapper(reader);
     }
 
-    // If we need to encode special characters please see
-    // https://stackoverflow.com/a/17737968
+    private static final Charset charset = Charset.forName("UTF-8");
     private ByteBuffer communicationBuffer = null;
     // Design decisions of this library:
     // There are two ways to communicate:
@@ -177,9 +176,11 @@ public class BFBridge {
     // communicationBuffer does not usually null terminate.
     // remember to: (std::string s).assign(ptr, size) or ptr[size] = 0;
 
-    // Remember:
-    // functions that use communicationBuffer should call
+    // functions that use communicationBuffer must call
     // communicationBuffer.rewind() before reading/writing
+    // If the last write to the communication buffer
+    // isn't an error, lastErrorBytes
+    // is not updated
     private int lastErrorBytes = 0;
 
     void BFSetCommunicationBuffer(ByteBuffer b) {
@@ -221,12 +222,12 @@ public class BFBridge {
         }
     }
 
-    // Please do not open another file without calling BFClose
     // Input Parameter: first filenameLength bytes of communicationBuffer
     int BFOpen(int filenameLength) {
         try {
             byte[] filename = new byte[filenameLength];
             communicationBuffer.rewind().get(filename);
+            close();
             reader.setId(new String(filename));
             return 1;
         } catch (Exception e) {
@@ -239,7 +240,7 @@ public class BFBridge {
     // writes to communicationBuffer and returns the number of bytes written
     int BFGetFormat() {
         try {
-            byte[] formatBytes = reader.getFormat().getBytes();
+            byte[] formatBytes = reader.getFormat().getBytes(charset);
             communicationBuffer.rewind().put(formatBytes);
             return formatBytes.length;
         } catch (Exception e) {
@@ -248,7 +249,7 @@ public class BFBridge {
         }
     }
 
-    // If expected to be the single file, or always true for single-file formats
+    // If expected to be the single file; always true for single-file formats
     // Input Parameter: first filenameLength bytes of communicationBuffer.
     int BFIsSingleFile(int filenameLength) {
         try {
@@ -274,7 +275,7 @@ public class BFBridge {
             if (file == null) {
                 return 0;
             } else {
-                byte[] characters = file.getBytes();
+                byte[] characters = file.getBytes(charset);
                 communicationBuffer.rewind().put(characters);
                 return characters.length;
             }
@@ -291,7 +292,7 @@ public class BFBridge {
             String[] files = reader.getUsedFiles();
             int charI = 0;
             for (String file : files) {
-                byte[] characters = file.getBytes();
+                byte[] characters = file.getBytes(charset);
                 if (characters.length + 2 > communicationBuffer.capacity()) {
                     saveError("Too long");
                     return -2;
@@ -455,7 +456,7 @@ public class BFBridge {
     // writes to communicationBuffer and returns the number of bytes written
     int BFGetDimensionOrder() {
         try {
-            byte[] strBytes = reader.getDimensionOrder().getBytes();
+            byte[] strBytes = reader.getDimensionOrder().getBytes(charset);
             communicationBuffer.rewind().put(strBytes);
             return strBytes.length;
         } catch (Exception e) {
@@ -568,7 +569,7 @@ public class BFBridge {
         }
     }
 
-    // https://downloads.openmicroscopy.org/bio-formats/6.14.0/api/loci/formats/IFormatReader.html#isFalseColor--
+    // https://downloads.openmicroscopy.org/bio-formats/7.0.0/api/loci/formats/IFormatReader.html#isFalseColor--
     // when we have 8 or 16 bits per channel, these might be signifying
     // indices in color profile.
     // isindexed false, isfalsecolor false -> no table
@@ -676,9 +677,9 @@ public class BFBridge {
         }
     }
 
-    // should be called after calling BFSetCurrentResolution with the/a relevant
-    // resolution, and the caller should ensure the correct aspect ratio
-    // for the width and height.
+    // warning: changes the current resolution level
+    // takes exact width and height.
+    // the caller should ensure the correct aspect ratio.
     // writes to communicationBuffer and returns the number of bytes written
     // prepares 3 channel or 4 channel, same sample format
     // and bitlength (but made unsigned if was int8 or int16 or int32)
@@ -696,9 +697,12 @@ public class BFBridge {
             readerWithThumbnailSizes.setThumbSizeX(width);
             readerWithThumbnailSizes.setThumbSizeY(height);
 
-            // We could also call openThumbBytes on the class
-            // but there's no need to, since the caller should already
-            // have set a relevant resolution
+            int resCount = reader.getResolutionCount();
+            reader.setResolution(resCount - 1);
+
+            // Using class's openThumbBytes
+            // instead of FormatTools.openThumbBytes 
+            // might break our custom thumbnail sizes?
             byte[] bytes = FormatTools.openThumbBytes(readerWithThumbnailSizes, plane);
             communicationBuffer.rewind().put(bytes);
             return bytes.length;
@@ -723,7 +727,7 @@ public class BFBridge {
             if (size == null) {
                 return 0d;
             }
-            return size.value(UNITS.MICROMETER).doubleValue() / reader.getSizeX();
+            return size.value(UNITS.MICROMETER).doubleValue();
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1d;
@@ -737,7 +741,7 @@ public class BFBridge {
             if (size == null) {
                 return 0d;
             }
-            return size.value(UNITS.MICROMETER).doubleValue() / reader.getSizeY();
+            return size.value(UNITS.MICROMETER).doubleValue();
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1d;
@@ -750,7 +754,7 @@ public class BFBridge {
             if (size == null) {
                 return 0d;
             }
-            return size.value(UNITS.MICROMETER).doubleValue() / reader.getSizeZ();
+            return size.value(UNITS.MICROMETER).doubleValue();
         } catch (Exception e) {
             saveError(getStackTrace(e));
             return -1d;
@@ -760,7 +764,7 @@ public class BFBridge {
     int BFDumpOMEXMLMetadata() {
         try {
             String metadataString = metadata.dumpXML();
-            byte[] bytes = metadataString.getBytes();
+            byte[] bytes = metadataString.getBytes(charset);
             if (bytes.length > communicationBuffer.capacity()) {
                 saveError("BFDumpOMEXMLMetadata: needed buffer of length at least " + bytes.length + " but current buffer is of length " + communicationBuffer.capacity());
                 return -2;
@@ -832,7 +836,7 @@ public class BFBridge {
 
             // TODO: series 0 and compression arg
             ImageConverter.main(new String[] { "-noflat", "-pyramid-resolutions", Integer.toString(numberOfLayers),
-                    "-pyramid-scale", "2", inPath, outPath });
+                    "-pyramid-scale", "2", "-series", "0", "-compression", "JPEG-2000 Lossy", inPath, outPath });
             // verify valid file
             close();
             reader.setId(outPath);
@@ -952,7 +956,7 @@ public class BFBridge {
     }
 
     private void saveError(String s) {
-        byte[] errorBytes = s.getBytes();
+        byte[] errorBytes = s.getBytes(charset);
         int bytes_len = errorBytes.length;
         // -1 to account for the null byte for security
         bytes_len = Math.min(bytes_len, Math.max(communicationBuffer.capacity() - 1, 0));
