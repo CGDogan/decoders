@@ -1,0 +1,25 @@
+<!--mvn clean dependency:copy-dependencies-->
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.camicroscope</groupId>
+    <artifactId>depends</artifactId>
+    <version>1</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.openmicroscopy</groupId>
+            <artifactId>ome-codecs</artifactId>
+            <version>0.4.5</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <configuration>
+                    <outputDirectory>jar_files2</outputDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
